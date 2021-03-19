@@ -18,7 +18,7 @@ def index(request):
     recently_added = Movie.object.filter(upload_date__gte=datetime.date.today() - 14)
 
     # Change this weeks favorite to this years favorite #
-    this_years_favorite = Movie.object.filter(release_date__gte='2021-01-01'). \
+    this_years_favorite = Movie.object.filter(release_date__gte=str(datetime.year) + '-01-01'). \
         annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
 
     context_dictionary = {
@@ -27,11 +27,11 @@ def index(request):
         "this_years_favorite": this_years_favorite,
     }
 
-    return render(request, "rotten_potatoes/index.html", context_dictionary)
+    return render(request, "index.html", context_dictionary)
 
 
 def about(request):
-    return render(request, "rotten_potatoes/about.html")
+    return render(request, 'about.html')
 
 
 def register(request):
@@ -61,9 +61,9 @@ def register(request):
         user_form = UserForm()
         profile_form = UserProfileForm()
 
-    return render(request, 'rotten_potatoes/register.html', context={'user_form': user_form,
-                                                                     'profile_form': profile_form,
-                                                                     'registered': registered})
+    return render(request, 'register.html', context={'user_form': user_form,
+                                                     'profile_form': profile_form,
+                                                     'registered': registered})
 
 
 def user_login(request):
@@ -103,7 +103,7 @@ def user_login(request):
     else:
         # No context variables to pass to the template system, hence the
         # blank dictionary object...
-        return render(request, 'rotten_potatoes/login.html')
+        return render(request, 'login.html')
 
 
 @login_required
@@ -118,23 +118,22 @@ def movie(request, movie_name_slug):
     context_dictionary = get_movie_context(movie_name_slug)
 
     # Render movie page with context dict. information passed
-    return render(request, "rotten_potatoes/movie.html", context_dictionary)
+    return render(request, "movie.html", context_dictionary)
 
 
 @login_required
 def edit_movie(request, movie_name_slug):
     form = EditMovieForm()
-    context_dictionary = {}
     initial_dict = {}
 
     # Get movie from the database, if not present return HttpResponse
-    try:
-        movie_obj = Movie.object.get(slug=movie_name_slug)
-    except movie_obj.DoesNotExist:
-        return HttpResponse("Fatal error, could not find " + movie_name_slug + " in the database")
+    if not check_movie_exists(movie_name_slug):
+        return HttpResponse("Movie " + movie_name_slug + " does not exist.")
+
+    movie_obj = Movie.object.get(slug=movie_name_slug)
 
     # Check if user is not the movie producer and admin
-    if request.user.pk() != movie_obj.user.pk() and not request.user.is_superuser():
+    if request.user.pk != movie_obj.user.pk and not request.user.is_superuser():
         print("Permission to edit denied.")
         redirect("/rotten_potatoes/")
 
@@ -147,20 +146,24 @@ def edit_movie(request, movie_name_slug):
         initial_dict["trailer"] = movie_obj.trailer
         initial_dict["genre"] = movie_obj.genre
         initial_dict["description"] = movie_obj.description
+        initial_dict["cover"] = movie_obj.cover
 
         # Get from with initial values set to pre-existing movie data
         form = EditMovieForm(initial=initial_dict)
-
-        return render(request, "rotten_potatoes/edit.html", {"form": form})
+        # Get context dict. with movie and form info
+        context_dict = get_movie_context(movie_name_slug)
+        context_dict["form"] = form
+        return render(request, "edit.html", context_dict)
 
     if request.method == "POST":
         form = EditMovieForm(request.POST)
 
         if form.is_valid():
-            form.save(commit=True)
+            form = EditMovieForm(request.POST, instance=movie_obj)
+            form.save()
             context_dictionary = get_movie_context(movie_name_slug)
 
-            return render(request, "rotten_potatoes/movie.html", context_dictionary)
+            return render(request, "movie.html", context_dictionary)
 
         else:
             print(form.errors)
@@ -169,6 +172,10 @@ def edit_movie(request, movie_name_slug):
 
 @login_required
 def add_comment(request, movie_name_slug):
+    # Check if movie exists
+    if not check_movie_exists(movie_name_slug):
+        return HttpResponse("Movie " + movie_name_slug + " does not exist")
+
     form = AddCommentForm()
 
     if request.method == "POST":
@@ -178,18 +185,40 @@ def add_comment(request, movie_name_slug):
             comment = form.save(commit=False)
             comment.user = request.user
             comment.movie = Movie.object.get(slug=movie_name_slug)
+            comment.time_posted = get_current_timezone()
             comment.save()
 
             return movie(request, movie_name_slug)
         else:
             print(form.errors)
 
-    return render(request, "rotten_potatoes/addcomment.html", {"form": form})
+    return render(request, "addcomment.html", {"form": form})
 
 
 @login_required
 def rate_movie(request, movie_name_slug):
-    pass
+    # Check if movie exists
+    if not check_movie_exists(movie_name_slug):
+        return HttpResponse("Movie " + movie_name_slug + " does not exist.")
+
+    form = AddRatingForm()
+    if request.method == "POST":
+        form = AddRatingForm(request.POST)
+        if form.is_valid():
+            rating = form.save(commit=False)
+            rating.user = request.user
+            rating.movie = Movie.object.get(slug=movie_name_slug)
+            rating.save()
+
+            return redirect("/rotten_potatoes/")
+        else:
+            print(form.errors)
+            return HttpResponse(form.errors)
+    else:
+        context_dict = get_movie_context(movie_name_slug)
+        context_dict['form'] = form
+
+        return render(request, "ratemovie.html", context_dict)
 
 
 @login_required
@@ -203,26 +232,94 @@ def add_movie(request):
         form = MovieForm(request.POST)
 
         if form.is_valid():
-            form.save(commit=True)
+            movie_form = form.save(commit=False)
+            # Set producer and datetime before saving to database
+            movie_form.user = request.user
+            movie_form.upload_date = get_default_timezone()
+            movie_form.save()
+
             return redirect('/rotten_potatoes/')
         else:
             print(form.errors)
 
-    return render(request, 'rotten_potatoes/addmovie.html', {"form": form})
+    return render(request, 'addmovie.html', {"form": form})
 
 
 @login_required
 def account(request):
-    pass
+    context_dict = {}
+    try:
+        profile = UserProfile.object.get(user=request.user)
+        context_dict = get_user_context(profile)
+
+    except UserProfile.DoesNotExist:
+        context_dict["user_details"] = None
+
+    return render(request, "account.html", context_dict)
 
 
 @login_required
 def edit_account(request):
-    pass
+    form = EditAccountForm()
+
+    if request.method == "POST":
+        form = EditAccountForm(request.POST)
+        if form.is_valid():
+            # Retrieve pk of user
+            profile = UserProfile.object.get(user=request.user)
+            # Associate change with user object in database
+            form = EditAccountForm(request.POST, instance=profile)
+            # Save form
+            form.save()
+
+            redirect('/rotten_potatoes/')
+        else:
+            return HttpResponse(form.errors)
+
+    else:
+        initial_dict = {}
+        form = EditAccountForm()
+
+        profile = UserProfile.object.get(user=request.user)
+        initial_dict["profile_pic"] = profile.profile_pic
+        initial_dict["description"] = profile.description
+        form = EditAccountForm(initial=initial_dict)
+
+        context_dict = get_user_context(profile)
+        context_dict["form"] = form
+        return render(request, 'edit.html', context_dict)
 
 
+# Ratings view with default sorting by movie rating
 def ratings(request):
-    pass
+    form = RatingsPageForm(request.POST or None)
+
+    if form.is_valid():
+        movies = Movie.object.annotate(avg_rating=Avg("rating__rating")).annotate(num_of_ratings=Count("rating"))
+        # get this years favorite
+        this_years_favorite = Movie.object.filter(release_date__gte=str(datetime.year) + '-01-01'). \
+            annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
+
+        clean_data = form.cleaned_data()
+        sort_by = clean_data.get('sort_by')
+        genre = clean_data.get('genre')
+
+        if genre is not None:
+            sorted_list = movies.filter(genre=genre).order_by(sort_by)
+        else:
+            sorted_list = movies.order_by(sort_by)
+
+        context_dict = {
+            "form": form,
+            "movie_list": sorted_list,
+            "this_years_favorite": this_years_favorite,
+        }
+
+        return render(request, "ratings.html", context_dict)
+
+    else:
+        print(form.errors)
+        return HttpResponse(form.errors)
 
 
 def get_movie_context(movie_name_slug):
@@ -235,13 +332,35 @@ def get_movie_context(movie_name_slug):
 
         # In a context dict. store all the details about movie in a list
         context_dictionary = {
-            "details": [movie_obj.name, movie_obj.release_date, movie_obj.actors, movie_obj.producer,
-                        movie_obj.trailer, movie_obj.genre, movie_obj.description, movie_obj.avg_rating,
-                        movie_obj.num_of_ratings]
+            "movie": movie_obj
         }
 
     # If movie object does not exist, set movie details to None
     except Movie.DoesNotExist:
-        context_dictionary["details"] = None
+        context_dictionary["movie"] = None
 
     return context_dictionary
+
+
+def get_user_context(profile):
+    context_dict = {"profile": profile}
+
+    # Check if user is a producer
+    if profile.producer:
+        # Get all movies added by this user
+        context_dict["added_movies"] = Movie.object.filter(producer=profile.user)
+    else:
+        context_dict["added_movies"] = None
+        # Get all rating made by this user, then get associated movie name
+        context_dict["rated_movies"] = Rating.object.filter(user=profile.user)
+
+    return context_dict
+
+
+def check_movie_exists(movie_name_slug):
+    # Check if movie exists
+    try:
+        Movie.object.get(slug=movie_name_slug)
+        return True
+    except Movie.DoesNotExist:
+        return False
