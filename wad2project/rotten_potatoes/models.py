@@ -1,11 +1,12 @@
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.contrib.auth.models import User
-from datetime import datetime
 
 # Create your models here.
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    profile_pic = models.ImageField(upload_to="profile_images", blank=True)
+    description = models.TextField(max_length=1024, default="")
 
     #boolean flag for identifying producers
     producer = models.BooleanField(default=False)
@@ -23,7 +24,7 @@ class Movie(models.Model):
     trailer = models.URLField(max_length=128)
     description = models.TextField(max_length=1024)
     cover = models.ImageField(upload_to="movie_images", blank=True)
-    upload_date = models.DateField(default=datetime.now())
+    upload_date = models.DateField()
     slug = models.SlugField(unique=True)
 
     def save(self, *args, **kwargs):
