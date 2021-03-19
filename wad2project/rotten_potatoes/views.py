@@ -1,8 +1,9 @@
+from django.db.models import Count, Avg
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
-from rotten_potatoes.models import*
-from rotten_potatoes.forms import*
+from rotten_potatoes.models import *
+from rotten_potatoes.forms import *
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
 from datetime import datetime
@@ -10,20 +11,21 @@ from datetime import datetime
 
 def index(request):
     # Query the top 5 movies
-    top_5_list = Movie.object.order_by('average_rating')[:5]
+    top_movies = Movie.object.annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[:5]
 
     # Query recently added movies -> requires field in movie model to track when added
     # Get movies which were uploaded in past 14 days
-    recently_added = Movie.object.filter(upload_date__gte=datetime.date.today()-14)
+    recently_added = Movie.object.filter(upload_date__gte=datetime.date.today() - 14)
 
     # Change this weeks favorite to this years favorite #
-    this_years_favorite = Movie.object.filter(release_date__gte='2021-01-01').oredr_by('average_rating')[0]
+    this_years_favorite = Movie.object.filter(release_date__gte='2021-01-01'). \
+        annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
 
     context_dictionary = {
-                          "top_5_list": top_5_list,
-                          "recently_added": recently_added,
-                          "this_years_favorite": this_years_favorite,
-                          }
+        "top_movies": top_movies,
+        "recently_added": recently_added,
+        "this_years_favorite": this_years_favorite,
+    }
 
     return render(request, "rotten_potatoes/index.html", context_dictionary)
 
@@ -35,8 +37,8 @@ def about(request):
 def register(request):
     registered = False
 
-    if registered.method == "POST":
-        user_form    = UserForm(request.POST)
+    if request.method == "POST":
+        user_form = UserForm(request.POST)
         profile_form = UserProfileForm(request.POST)
 
         if user_form.is_valid() and profile_form.is_valid():
@@ -56,11 +58,12 @@ def register(request):
             print(user_form.errors, profile_form.errors)
 
     else:
-        user_form    = UserForm()
+        user_form = UserForm()
         profile_form = UserProfileForm()
 
     return render(request, 'rotten_potatoes/register.html', context={'user_form': user_form,
-                                                           'profile_form': profile_form, 'registered': registered})
+                                                                     'profile_form': profile_form,
+                                                                     'registered': registered})
 
 
 def user_login(request):
@@ -112,41 +115,80 @@ def user_logout(request):
 
 
 def movie(request, movie_name_slug):
-    context_dictionary = {}
-
-    try:
-        # Get movie object to get details
-        movie = Movie.object.get(slug=movie_name_slug)
-
-        # In a context dict. store all the details about movie in a list
-        context_dictionary = {
-            "details": [movie.name, movie.release_date, movie.actors, movie.producer,
-                        movie.trailer, movie.genre, movie.description]
-        }
-
-    # If movie object does not exist, set movie details to None
-    except Movie.DoesNotExist:
-        context_dictionary["details"] = None
+    context_dictionary = get_movie_context(movie_name_slug)
 
     # Render movie page with context dict. information passed
-    return render(request,"rotten_potatoes/movie.html", context_dictionary)
-
-
-
+    return render(request, "rotten_potatoes/movie.html", context_dictionary)
 
 
 @login_required
 def edit_movie(request, movie_name_slug):
-    pass
+    form = EditMovieForm()
+    context_dictionary = {}
+    initial_dict = {}
+
+    # Get movie from the database, if not present return HttpResponse
+    try:
+        movie_obj = Movie.object.get(slug=movie_name_slug)
+    except movie_obj.DoesNotExist:
+        return HttpResponse("Fatal error, could not find " + movie_name_slug + " in the database")
+
+    # Check if user is not the movie producer and admin
+    if request.user.pk() != movie_obj.user.pk() and not request.user.is_superuser():
+        print("Permission to edit denied.")
+        redirect("/rotten_potatoes/")
+
+    if request.method == "GET":
+        # Fill initial dictionary with pre-existing values
+        initial_dict["name"] = movie_obj.name
+        initial_dict["release_date"] = movie_obj.release_date
+        initial_dict["actors"] = movie_obj.actors
+        initial_dict["producer"] = movie_obj.producer
+        initial_dict["trailer"] = movie_obj.trailer
+        initial_dict["genre"] = movie_obj.genre
+        initial_dict["description"] = movie_obj.description
+
+        # Get from with initial values set to pre-existing movie data
+        form = EditMovieForm(initial=initial_dict)
+
+        return render(request, "rotten_potatoes/edit.html", {"form": form})
+
+    if request.method == "POST":
+        form = EditMovieForm(request.POST)
+
+        if form.is_valid():
+            form.save(commit=True)
+            context_dictionary = get_movie_context(movie_name_slug)
+
+            return render(request, "rotten_potatoes/movie.html", context_dictionary)
+
+        else:
+            print(form.errors)
+            return HttpResponse(form.errors)
 
 
 @login_required
-def add_comment(request):
-    pass
+def add_comment(request, movie_name_slug):
+    form = AddCommentForm()
+
+    if request.method == "POST":
+        form = AddCommentForm(request.POST)
+
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.user = request.user
+            comment.movie = Movie.object.get(slug=movie_name_slug)
+            comment.save()
+
+            return movie(request, movie_name_slug)
+        else:
+            print(form.errors)
+
+    return render(request, "rotten_potatoes/addcomment.html", {"form": form})
 
 
 @login_required
-def rate_movie(request):
+def rate_movie(request, movie_name_slug):
     pass
 
 
@@ -155,8 +197,8 @@ def add_movie(request):
     form = MovieForm()
 
     if request.method == "POST":
-        if not user.is_producer:
-            pass
+        if not request.user.producer:
+            return redirect('/rotten_potatoes/')
 
         form = MovieForm(request.POST)
 
@@ -182,3 +224,24 @@ def edit_account(request):
 def ratings(request):
     pass
 
+
+def get_movie_context(movie_name_slug):
+    context_dictionary = {}
+    try:
+        # Get movie object to get details
+        movie_obj = Movie.object.get(slug=movie_name_slug)
+        # Get average rating and number of ratings
+        movie_obj = movie_obj.annotate(avg_rating=Avg('rating__rating')).anotate(num_of_ratings=Count('rating'))
+
+        # In a context dict. store all the details about movie in a list
+        context_dictionary = {
+            "details": [movie_obj.name, movie_obj.release_date, movie_obj.actors, movie_obj.producer,
+                        movie_obj.trailer, movie_obj.genre, movie_obj.description, movie_obj.avg_rating,
+                        movie_obj.num_of_ratings]
+        }
+
+    # If movie object does not exist, set movie details to None
+    except Movie.DoesNotExist:
+        context_dictionary["details"] = None
+
+    return context_dictionary
