@@ -185,7 +185,7 @@ def add_comment(request, movie_name_slug):
             comment = form.save(commit=False)
             comment.user = request.user
             comment.movie = Movie.object.get(slug=movie_name_slug)
-            comment.time_posted = get_current_timezone()
+            comment.time_posted = now()
             comment.save()
 
             return movie(request, movie_name_slug)
@@ -205,10 +205,11 @@ def rate_movie(request, movie_name_slug):
     if request.method == "POST":
         form = AddRatingForm(request.POST)
         if form.is_valid():
-            rating = form.save(commit=False)
-            rating.user = request.user
-            rating.movie = Movie.object.get(slug=movie_name_slug)
-            rating.save()
+            rating_obj = form.save(commit=False)
+            rating_obj.user = request.user
+            rating_obj.movie = Movie.object.get(slug=movie_name_slug)
+            rating_obj.rating = int(form.rating)
+            rating_obj.save()
 
             return redirect("/rotten_potatoes/")
         else:
@@ -235,7 +236,7 @@ def add_movie(request):
             movie_form = form.save(commit=False)
             # Set producer and datetime before saving to database
             movie_form.user = request.user
-            movie_form.upload_date = get_default_timezone()
+            movie_form.upload_date = now()
             movie_form.save()
 
             return redirect('/rotten_potatoes/')
