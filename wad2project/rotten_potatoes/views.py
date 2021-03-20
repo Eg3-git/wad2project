@@ -116,7 +116,7 @@ def user_logout(request):
 
 def movie(request, movie_name_slug):
     context_dictionary = get_movie_context(movie_name_slug)
-
+    context_dictionary["comments"] = Comment.object.filter(movie=Movie.object.get(slug=movie_name_slug))
     # Render movie page with context dict. information passed
     return render(request, "movie.html", context_dictionary)
 
