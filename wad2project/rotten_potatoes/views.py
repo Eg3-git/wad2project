@@ -11,27 +11,30 @@ from datetime import datetime
 
 def index(request):
     # Query the top 5 movies
-    top_movies = Movie.object.annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[:5]
+    top_movies = Movie.objects.annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[:5]
 
     # Query recently added movies -> requires field in movie model to track when added
     # Get movies which were uploaded in past 14 days
-    recently_added = Movie.object.filter(upload_date__gte=datetime.date.today() - 14)
+    #recently_added = Movie.objects.filter(upload_date__gte=datetime.date.today() - 14)
 
     # Change this weeks favorite to this years favorite #
-    this_years_favorite = Movie.object.filter(release_date__gte=str(datetime.year) + '-01-01'). \
-        annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
+    #this_years_favorite = Movie.objects.filter(release_date__gte=str(datetime.year) + '-01-01'). \
+        #annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
 
     context_dictionary = {
         "top_movies": top_movies,
-        "recently_added": recently_added,
-        "this_years_favorite": this_years_favorite,
+        #"recently_added": recently_added,
+        #"this_years_favorite": this_years_favorite,
+        "is_producer": False,
     }
+    
+    
 
-    return render(request, "index.html", context_dictionary)
+    return render(request, "rotten_potatoes/index.html", context_dictionary)
 
 
 def about(request):
-    return render(request, 'about.html')
+    return render(request, 'rotten_potatoes/about.html')
 
 
 def register(request):
