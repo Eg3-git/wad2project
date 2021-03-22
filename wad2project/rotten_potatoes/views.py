@@ -64,7 +64,7 @@ def register(request):
         user_form = UserForm()
         profile_form = UserProfileForm()
 
-    return render(request, 'register.html', context={'user_form': user_form,
+    return render(request, 'rotten_potatoes/register.html', context={'user_form': user_form,
                                                      'profile_form': profile_form,
                                                      'registered': registered})
 
@@ -106,7 +106,7 @@ def user_login(request):
     else:
         # No context variables to pass to the template system, hence the
         # blank dictionary object...
-        return render(request, 'login.html')
+        return render(request, 'rotten_potatoes/login.html')
 
 
 @login_required
@@ -253,8 +253,10 @@ def add_movie(request):
 def account(request):
     context_dict = {}
     try:
-        profile = UserProfile.object.get(user=request.user)
+        profile = UserProfile.objects.get(user=request.user)
         context_dict = get_user_context(profile)
+        movies = Movie.objects.get(producer=request.user)
+        context_dict['movies'] = movies
 
     except UserProfile.DoesNotExist:
         context_dict["user_details"] = None
