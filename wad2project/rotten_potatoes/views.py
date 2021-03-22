@@ -119,7 +119,7 @@ def user_logout(request):
 
 def movie(request, movie_name_slug):
     context_dictionary = get_movie_context(movie_name_slug)
-    context_dictionary["comments"] = Comment.object.filter(movie=Movie.object.get(slug=movie_name_slug))
+    context_dictionary["comments"] = Comment.objects.filter(movie=Movie.object.get(slug=movie_name_slug))
     # Render movie page with context dict. information passed
     return render(request, "movie.html", context_dictionary)
 
@@ -253,7 +253,7 @@ def add_movie(request):
 def account(request):
     context_dict = {}
     try:
-        profile = UserProfile.object.get(user=request.user)
+        profile = UserProfile.objects.get(user=request.user)
         context_dict = get_user_context(profile)
 
     except UserProfile.DoesNotExist:
@@ -270,7 +270,7 @@ def edit_account(request):
         form = EditAccountForm(request.POST)
         if form.is_valid():
             # Retrieve pk of user
-            profile = UserProfile.object.get(user=request.user)
+            profile = UserProfile.objects.get(user=request.user)
             # Associate change with user object in database
             form = EditAccountForm(request.POST, instance=profile)
             # Save form
@@ -284,7 +284,7 @@ def edit_account(request):
         initial_dict = {}
         form = EditAccountForm()
 
-        profile = UserProfile.object.get(user=request.user)
+        profile = UserProfile.objects.get(user=request.user)
         initial_dict["profile_pic"] = profile.profile_pic
         initial_dict["description"] = profile.description
         form = EditAccountForm(initial=initial_dict)
@@ -299,9 +299,9 @@ def ratings(request):
     form = RatingsPageForm(request.POST or None)
 
     if form.is_valid():
-        movies = Movie.object.annotate(avg_rating=Avg("rating__rating")).annotate(num_of_ratings=Count("rating"))
+        movies = Movie.objects.annotate(avg_rating=Avg("rating__rating")).annotate(num_of_ratings=Count("rating"))
         # get this years favorite
-        this_years_favorite = Movie.object.filter(release_date__gte=str(datetime.year) + '-01-01'). \
+        this_years_favorite = Movie.objects.filter(release_date__gte=str(datetime.year) + '-01-01'). \
             annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
 
         clean_data = form.cleaned_data()
@@ -330,7 +330,7 @@ def get_movie_context(movie_name_slug):
     context_dictionary = {}
     try:
         # Get movie object to get details
-        movie_obj = Movie.object.get(slug=movie_name_slug)
+        movie_obj = Movie.objects.get(slug=movie_name_slug)
         # Get average rating and number of ratings
         movie_obj = movie_obj.annotate(avg_rating=Avg('rating__rating')).anotate(num_of_ratings=Count('rating'))
 
@@ -352,11 +352,11 @@ def get_user_context(profile):
     # Check if user is a producer
     if profile.producer:
         # Get all movies added by this user
-        context_dict["added_movies"] = Movie.object.filter(producer=profile.user)
+        context_dict["added_movies"] = Movie.objects.filter(producer=profile.user)
     else:
         context_dict["added_movies"] = None
         # Get all rating made by this user, then get associated movie name
-        context_dict["rated_movies"] = Rating.object.filter(user=profile.user)
+        context_dict["rated_movies"] = Rating.objects.filter(user=profile.user)
 
     return context_dict
 
@@ -364,7 +364,7 @@ def get_user_context(profile):
 def check_movie_exists(movie_name_slug):
     # Check if movie exists
     try:
-        Movie.object.get(slug=movie_name_slug)
+        Movie.objects.get(slug=movie_name_slug)
         return True
     except Movie.DoesNotExist:
         return False
