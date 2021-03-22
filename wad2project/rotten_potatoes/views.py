@@ -16,6 +16,7 @@ def index(request):
 
     # Query recently added movies -> requires field in movie model to track when added
     # Get movies which were uploaded in past 14 days
+
     # recently_added = Movie.objects.filter(upload_date__gte=datetime.date.today() - 14)
 
     # Change this weeks favorite to this years favorite #
