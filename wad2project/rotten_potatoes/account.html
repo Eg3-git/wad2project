@@ -1,0 +1,19 @@
+{% extends 'rotten_potatoes/base.html' %}
+{% load staticfiles %}
+
+{% block title_block %}
+	Account
+{% endblock %}
+
+{% block body_block %}
+	<h1>Hello {{ user.username }}</h1>
+	<h3>Your movies</h3>
+	
+	<ul>
+	{% if movies %}
+		{% for m in movies %}
+			<li>{{ m.name }}</li>
+		{% endfor %}
+	{% endif %}
+	</ul>
+{% endblock %}

@@ -255,6 +255,8 @@ def account(request):
     try:
         profile = UserProfile.objects.get(user=request.user)
         context_dict = get_user_context(profile)
+        movies = Movie.objects.get(producer=request.user)
+        context_dict['movies'] = movies
 
     except UserProfile.DoesNotExist:
         context_dict["user_details"] = None

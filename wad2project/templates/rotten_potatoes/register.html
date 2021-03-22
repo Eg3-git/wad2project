@@ -1,0 +1,26 @@
+{% extends 'rotten_potatoes/base.html' %}
+{% load staticfiles %}
+
+{% block title_block %}
+	Register
+{% endblock %}
+
+{% block body_block %}
+	<h1>Register</h1>
+	{% if registered %}
+		<h3>Thanks for registering</h3>
+		<a href="{% url 'rotten_potatoes:index' %}">Return to home</a>
+	{% else %}
+		<form
+			id="user_form"
+			method="post"
+			action="{% url 'rotten_potatoes:register' %}"
+			enctype="multipart/form-data"
+			class="auto-form">
+				{% csrf_token %}
+				{{ user_form.as_p }}
+				{{ profile_form.as_p }}
+				<button type="submit">Register</button>
+		</form>
+	{% endif %}
+{% endblock %}
