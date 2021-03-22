@@ -1,6 +1,7 @@
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.contrib.auth.models import User
+from datetime import datetime
 
 # Create your models here.
 class UserProfile(models.Model):
@@ -15,9 +16,9 @@ class UserProfile(models.Model):
         return self.user.username
 
 class Movie(models.Model):
-    name = models.CharField(max_length=128, unique=True)
-    release_date = models.DateField(default="Unknown")
-    actors = models.CharField(max_length=256) # Might need modification
+    name = models.CharField(max_length=128)
+    release_date = models.DateField(null=True)
+    actors = models.CharField(max_length=256)
     genre = models.CharField(max_length=256)
     # Producer ForeignKey
     producer = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
@@ -30,6 +31,7 @@ class Movie(models.Model):
     def save(self, *args, **kwargs):
         # Produce slug from name, then save
         self.slug = slugify(self.name)
+        self.upload_date = datetime.now()
         super(Movie, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -49,8 +51,9 @@ class Comment(models.Model):
     # UserProfile Foreign Key
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     text = models.TextField(max_length=1024)
-    time_posted = models.DateField(default="Unknown")
+    time_posted = models.DateField()
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
 
     def __str__(self):
+        self.time_posted = datetime.now()
         return self.text
