@@ -7,6 +7,7 @@ from rotten_potatoes.forms import *
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
 from datetime import datetime
+from django.utils.timezone import now
 
 
 def index(request):
@@ -15,20 +16,19 @@ def index(request):
 
     # Query recently added movies -> requires field in movie model to track when added
     # Get movies which were uploaded in past 14 days
-    #recently_added = Movie.objects.filter(upload_date__gte=datetime.date.today() - 14)
+
+    # recently_added = Movie.objects.filter(upload_date__gte=datetime.date.today() - 14)
 
     # Change this weeks favorite to this years favorite #
-    #this_years_favorite = Movie.objects.filter(release_date__gte=str(datetime.year) + '-01-01'). \
-        #annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
+    # this_years_favorite = Movie.objects.filter(release_date__gte=str(datetime.year) + '-01-01'). \
+    # annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
 
     context_dictionary = {
         "top_movies": top_movies,
-        #"recently_added": recently_added,
-        #"this_years_favorite": this_years_favorite,
+        # "recently_added": recently_added,
+        # "this_years_favorite": this_years_favorite,
         "is_producer": False,
     }
-    
-    
 
     return render(request, "rotten_potatoes/index.html", context_dictionary)
 
@@ -64,7 +64,7 @@ def register(request):
         user_form = UserForm()
         profile_form = UserProfileForm()
 
-    return render(request, 'register.html', context={'user_form': user_form,
+    return render(request, 'rotten_potatoes/register.html', context={'user_form': user_form,
                                                      'profile_form': profile_form,
                                                      'registered': registered})
 
@@ -106,7 +106,7 @@ def user_login(request):
     else:
         # No context variables to pass to the template system, hence the
         # blank dictionary object...
-        return render(request, 'login.html')
+        return render(request, 'rotten_potatoes/login.html')
 
 
 @login_required
@@ -121,7 +121,7 @@ def movie(request, movie_name_slug):
     context_dictionary = get_movie_context(movie_name_slug)
     context_dictionary["comments"] = Comment.objects.filter(movie=Movie.object.get(slug=movie_name_slug))
     # Render movie page with context dict. information passed
-    return render(request, "movie.html", context_dictionary)
+    return render(request, "rotten_potatoes/movie.html", context_dictionary)
 
 
 @login_required
@@ -156,7 +156,7 @@ def edit_movie(request, movie_name_slug):
         # Get context dict. with movie and form info
         context_dict = get_movie_context(movie_name_slug)
         context_dict["form"] = form
-        return render(request, "edit.html", context_dict)
+        return render(request, "rotten_potatoes/edit.html", context_dict)
 
     if request.method == "POST":
         form = EditMovieForm(request.POST)
@@ -166,7 +166,7 @@ def edit_movie(request, movie_name_slug):
             form.save()
             context_dictionary = get_movie_context(movie_name_slug)
 
-            return render(request, "movie.html", context_dictionary)
+            return render(request, "rotten_potatoes/movie.html", context_dictionary)
 
         else:
             print(form.errors)
@@ -195,7 +195,7 @@ def add_comment(request, movie_name_slug):
         else:
             print(form.errors)
 
-    return render(request, "addcomment.html", {"form": form})
+    return render(request, "rotten_potatoes/addcomment.html", {"form": form})
 
 
 @login_required
@@ -222,7 +222,7 @@ def rate_movie(request, movie_name_slug):
         context_dict = get_movie_context(movie_name_slug)
         context_dict['form'] = form
 
-        return render(request, "ratemovie.html", context_dict)
+        return render(request, "rotten_potatoes/ratemovie.html", context_dict)
 
 
 @login_required
@@ -246,7 +246,7 @@ def add_movie(request):
         else:
             print(form.errors)
 
-    return render(request, 'addmovie.html', {"form": form})
+    return render(request, 'rotten_potatoes/addmovie.html', {"form": form})
 
 
 @login_required
@@ -259,7 +259,7 @@ def account(request):
     except UserProfile.DoesNotExist:
         context_dict["user_details"] = None
 
-    return render(request, "account.html", context_dict)
+    return render(request, "rotten_potatoes/account.html", context_dict)
 
 
 @login_required
@@ -291,7 +291,7 @@ def edit_account(request):
 
         context_dict = get_user_context(profile)
         context_dict["form"] = form
-        return render(request, 'edit.html', context_dict)
+        return render(request, 'rotten_potatoes/edit.html', context_dict)
 
 
 # Ratings view with default sorting by movie rating
@@ -319,7 +319,7 @@ def ratings(request):
             "this_years_favorite": this_years_favorite,
         }
 
-        return render(request, "ratings.html", context_dict)
+        return render(request, "rotten_potatoes/ratings.html", context_dict)
 
     else:
         print(form.errors)
