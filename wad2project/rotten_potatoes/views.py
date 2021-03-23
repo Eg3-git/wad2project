@@ -6,7 +6,7 @@ from rotten_potatoes.models import *
 from rotten_potatoes.forms import *
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.utils.timezone import now
 
 
@@ -14,19 +14,17 @@ def index(request):
     # Query the top 5 movies
     top_movies = Movie.objects.annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[:5]
 
-    # Query recently added movies -> requires field in movie model to track when added
     # Get movies which were uploaded in past 14 days
-
-    # recently_added = Movie.objects.filter(upload_date__gte=datetime.date.today() - 14)
+    recently_added = Movie.objects.filter(upload_date__gte=datetime.now()-timedelta(days=14))
 
     # Change this weeks favorite to this years favorite #
-    # this_years_favorite = Movie.objects.filter(release_date__gte=str(datetime.year) + '-01-01'). \
-    # annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
+    this_years_favorite = Movie.objects.filter(release_date__gte='2021-01-01').\
+    annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
 
     context_dictionary = {
         "top_movies": top_movies,
-        # "recently_added": recently_added,
-        # "this_years_favorite": this_years_favorite,
+        "recently_added": recently_added,
+        "this_years_favorite": this_years_favorite,
         "is_producer": False,
     }
 
