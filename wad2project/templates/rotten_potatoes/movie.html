@@ -1,0 +1,19 @@
+{% extends 'rotten_potatoes/base.html' %}
+{% load staticfiles %}
+
+{% block title_block %}
+	{{ movie.name }}
+{% endblock %}
+
+{% block body_block %}
+	<h1>{{ movie.name }}</h1>
+	<h3>Video Here</h3>
+	<p>Rating = {{ movie.avg_rating }}</p>
+	<ul>
+	{% if comments %}
+		{% for c in comments %}
+			<li>{{ c.user }}: {{ c.text }}</li>
+		{% endfor %}
+	{% endif %}
+	</ul>
+{% endblock %}

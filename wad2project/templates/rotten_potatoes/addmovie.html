@@ -1,0 +1,22 @@
+{% extends 'rotten_potatoes/base.html' %}
+{% load staticfiles %}
+
+{% block title_block %}
+	Add a movie
+{% endblock %}
+
+{% block body_block %}
+	<h1>Add a Movie</h1>
+		<form
+			id="movie_form"
+			method="post"
+			action="{% url 'rotten_potatoes:addmovie' %}"
+			enctype="multipart/form-data"
+			class="auto-form">
+				{% csrf_token %}
+				{{ movie_form.as_p }}
+				
+				<button type="submit">Add</button>
+		</form>
+	
+{% endblock %}
