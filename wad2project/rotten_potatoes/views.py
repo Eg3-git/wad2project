@@ -25,7 +25,6 @@ def index(request):
         "top_movies": top_movies,
         "recently_added": recently_added,
         "this_years_favorite": this_years_favorite,
-        "is_producer": False,
     }
 
     return render(request, "rotten_potatoes/index.html", context_dictionary)
@@ -202,6 +201,9 @@ def rate_movie(request, movie_name_slug):
     if not check_movie_exists(movie_name_slug):
         return HttpResponse("Movie " + movie_name_slug + " does not exist.")
 
+    if request.user.pk == Movie.object.get(slug=movie_name_slug).producer.pk:
+        return HttpResponse("You can NOT rate your own movie.")
+
     form = AddRatingForm()
     if request.method == "POST":
         form = AddRatingForm(request.POST)
@@ -253,8 +255,11 @@ def account(request):
     try:
         profile = UserProfile.objects.get(user=request.user)
         context_dict = get_user_context(profile)
-        movies = Movie.objects.get(producer=request.user)
-        context_dict['movies'] = movies
+        try:
+            movies = Movie.objects.get(producer=UserProfile.objects.get(user=request.user))
+            context_dict['movies'] = movies
+        except Movie.DoesNotExist:
+            context_dict['movies'] = None
 
     except UserProfile.DoesNotExist:
         context_dict["user_details"] = None
@@ -352,11 +357,11 @@ def get_user_context(profile):
     # Check if user is a producer
     if profile.producer:
         # Get all movies added by this user
-        context_dict["added_movies"] = Movie.objects.filter(producer=profile.user)
+        context_dict["added_movies"] = Movie.objects.filter(producer=profile)
     else:
         context_dict["added_movies"] = None
         # Get all rating made by this user, then get associated movie name
-        context_dict["rated_movies"] = Rating.objects.filter(user=profile.user)
+        context_dict["rated_movies"] = Rating.objects.filter(user=profile)
 
     return context_dict
 
