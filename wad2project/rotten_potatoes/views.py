@@ -345,10 +345,16 @@ def get_movie_context(movie_name_slug):
         movie_obj = Movie.objects.get(slug=movie_name_slug)
         # Get average rating and number of ratings
         movie_obj = movie_obj.annotate(avg_rating=Avg('rating__rating')).anotate(num_of_ratings=Count('rating'))
+        
+        #Convert url into embedded video link
+        url = movie_obj.trailer
+        x = link.split("=")
+        newLink = "https://www.youtube.com/embed/" + x[1]
 
         # In a context dict. store all the details about movie in a list
         context_dictionary = {
             "movie": movie_obj
+            "urlLink": newLink
         }
 
     # If movie object does not exist, set movie details to None
