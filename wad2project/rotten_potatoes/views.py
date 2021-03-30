@@ -11,32 +11,23 @@ from django.utils.timezone import now
 
 
 def index(request):
-    try:
-        # Query the top 5 movies
-        top_movies = Movie.objects.annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[:5]
+    # Query the top 5 movies
+    top_movies = Movie.objects.annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[:5]
 
-        # Get movies which were uploaded in past 14 days
-        recently_added = Movie.objects.filter(upload_date__gte=datetime.now() - timedelta(days=14))
+    # Get movies which were uploaded in past 14 days
+    recently_added = Movie.objects.filter(upload_date__gte=datetime.now()-timedelta(days=14))
 
-        # Change this weeks favorite to this years favorite #
-        current_year = datetime.now().date().strftime("%Y")   # Get current year
-        this_years_favorite = Movie.objects.filter(release_date__range=[current_year + '-01-01', current_year + '-12-31']).\
-            annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
+    # Change this weeks favorite to this years favorite #
+    this_years_favorite = Movie.objects.filter(release_date__gte='2021-01-01').\
+    annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
 
-        context_dictionary = {
-            "top_movies": top_movies,
-            "recently_added": recently_added,
-            "this_years_favorite": this_years_favorite,
-        }
+    context_dictionary = {
+        "top_movies": top_movies,
+        "recently_added": recently_added,
+        "this_years_favorite": this_years_favorite,
+    }
 
-        return render(request, "rotten_potatoes/index.html", context_dictionary)
-
-    # If empty database, return none for all 3 queries
-    except Movie.DoesNotExist:
-        return render(request, "rotten_potatoes:index", {"top_movies": None,
-                                                         "recently_added": None,
-                                                         "this_years_favorite": None,
-                                                         })
+    return render(request, "rotten_potatoes/index.html", context_dictionary)
 
 
 def about(request):
@@ -71,8 +62,8 @@ def register(request):
         profile_form = UserProfileForm()
 
     return render(request, 'rotten_potatoes/register.html', context={'user_form': user_form,
-                                                                     'profile_form': profile_form,
-                                                                     'registered': registered})
+                                                     'profile_form': profile_form,
+                                                     'registered': registered})
 
 
 def user_login(request):
@@ -124,17 +115,8 @@ def user_logout(request):
 
 
 def movie(request, movie_name_slug):
-    # Get movie from the database, if not present return HttpResponse
-    if not check_movie_exists(movie_name_slug):
-        return HttpResponse("Movie " + movie_name_slug + " does not exist.")
-
     context_dictionary = get_movie_context(movie_name_slug)
-
-    try:
-        context_dictionary["comments"] = Comment.objects.filter(movie=Movie.object.get(slug=movie_name_slug))
-    except Comment.DoesNotExist:
-        context_dictionary["comments"] = None
-
+    context_dictionary["comments"] = Comment.objects.filter(movie=Movie.object.get(slug=movie_name_slug))
     # Render movie page with context dict. information passed
     return render(request, "rotten_potatoes/movie.html", context_dictionary)
 
@@ -323,10 +305,8 @@ def ratings(request):
 
     if form.is_valid():
         movies = Movie.objects.annotate(avg_rating=Avg("rating__rating")).annotate(num_of_ratings=Count("rating"))
-
-        current_year = datetime.now().date().strftime("%Y")  # Get current year
         # get this years favorite
-        this_years_favorite = Movie.objects.filter(release_date__gte=current_year + '-01-01').\
+        this_years_favorite = Movie.objects.filter(release_date__gte=str(datetime.year) + '-01-01'). \
             annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
 
         clean_data = form.cleaned_data()
@@ -355,9 +335,9 @@ def get_movie_context(movie_name_slug):
     context_dictionary = {}
     try:
         # Get movie object to get details
-        movie_obj = Movie.objects.annotate(avg_rating=Avg('rating__rating')).anotate(num_of_ratings=Count('rating'))
+        movie_obj = Movie.objects.get(slug=movie_name_slug)
         # Get average rating and number of ratings
-        movie_obj = movie_obj.objects.get(slug=movie_name_slug)
+        movie_obj = movie_obj.annotate(avg_rating=Avg('rating__rating')).anotate(num_of_ratings=Count('rating'))
 
         # In a context dict. store all the details about movie in a list
         context_dictionary = {
