@@ -6,19 +6,23 @@
 {% endblock %}
 
 {% block body_block %}
-	<h1>{{ movie.name }}</h1>
-	<h3>Movie here</h3>
+	<div>
+		<h1>{{ movie.name }}</h1>
+		<iframe width="560" height="315" src={{ urlLink }} frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+		<a class="emt" href="{% url 'rotten_potatoes:add_comment' movie.slug %}">Comment</a>
+	</div>
 	
-	<a class="emt" href="{% url 'rotten_potatoes:add_comment' movie.slug %}">Comment</a>
-	<p>
-		Avg. Rating: {{ movie.avg_rating }}
-	</p>
-	<p>
-		Number Of Ratings: {{ movie.num_of_ratings }}
-	</p>
-	<p>
-		Producer: {{ movie.producer }}
-	</p>
+
+	<div>
+		<p>Release Date = {{ movie.release_date }}</p>
+		<p>Actors = {{ movie.actors }}</p>
+		<p>Genre = {{ movie.genre }}</p>
+		<p>Description = {{ movie.description }}</p>
+		<p>Uploaded = {{ movie.upload_date }}</p>
+    <p>Average Rating = {{ movie.avg_rating }} </p>
+    <p>Number Of Ratings = {{ movie.num_of_ratings }} </p>
+	</div>
+
 	<ul>
 	{% if comments %}
 		{% for c in comments %}
