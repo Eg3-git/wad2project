@@ -16,7 +16,8 @@ def index(request):
 
     # Get movies which were uploaded in past 14 days
     recently_added = Movie.objects.filter(upload_date__gte=datetime.now()-timedelta(days=14))
-
+    
+    
     # Change this weeks favorite to this years favorite #
     this_years_favorite = Movie.objects.filter(release_date__gte='2021-01-01').\
     annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
@@ -26,6 +27,12 @@ def index(request):
         "recently_added": recently_added,
         "this_years_favorite": this_years_favorite,
     }
+    
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+        context_dict['is_producer'] = profile.producer
+    except:
+        context_dict['is_producer'] = False
 
     return render(request, "rotten_potatoes/index.html", context_dictionary)
 

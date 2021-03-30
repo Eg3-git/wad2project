@@ -34,6 +34,9 @@
 			<a class="emt" href="{% url 'rotten_potatoes:about' %}">About</a>
 			
 		{% if user.is_authenticated %}
+			{% if is_producer %}
+				<a class="emt" href="{% url 'rotten_potatoes:add_movie' %}">Add</a>
+			{% endif %}
 			<a class="emt" href="{% url 'rotten_potatoes:account' %}">Account</a>
 			<a class="emt" href="{% url 'rotten_potatoes:logout' %}">Log Out</a>
 		{% else %}
