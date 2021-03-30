@@ -21,8 +21,8 @@ def index(request):
         # Change this weeks favorite to this years favorite #
         current_year = datetime.now().date().strftime("%Y")  # Get current year
         this_years_favorite = \
-        Movie.objects.filter(release_date__range=[current_year + '-01-01', current_year + '-12-31']). \
-            annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
+            Movie.objects.filter(release_date__range=[current_year + '-01-01', current_year + '-12-31']). \
+                annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
 
         context_dictionary = {
             "top_movies": top_movies,
@@ -179,9 +179,8 @@ def edit_movie(request, movie_name_slug):
         if form.is_valid():
             form = EditMovieForm(request.POST, instance=movie_obj)
             form.save()
-            context_dictionary = get_movie_context(movie_name_slug)
 
-            return render(request, "rotten_potatoes/movie.html", context_dictionary)
+            return redirect(reverse("rotten_potatoes:movie", kwargs={"movie_name_slug": movie_name_slug}))
 
         else:
             print(form.errors)
@@ -206,7 +205,7 @@ def add_comment(request, movie_name_slug):
             comment.time_posted = now()
             comment.save()
 
-            return redirect('/rotten_potatoes/')
+            return redirect(reverse('rotten_potatoes:movie', kwargs={"movie_name_slug": movie_name_slug}))
         else:
             print(form.errors)
 
@@ -231,7 +230,8 @@ def rate_movie(request, movie_name_slug):
             rating_obj.movie = Movie.objects.get(slug=movie_name_slug)
             rating_obj.save()
 
-            return redirect("/rotten_potatoes/")
+            return redirect(reverse('rotten_potatoes:movie',
+                                    kwargs={'movie_name_slug': movie_name_slug}))
         else:
             print(form.errors)
             return HttpResponse(form.errors)
@@ -299,7 +299,7 @@ def edit_account(request):
             # Save form
             form.save()
 
-            return redirect('/rotten_potatoes/')
+            return redirect(reverse("rotten_potatoes:account"))
         else:
             return HttpResponse(form.errors)
 
