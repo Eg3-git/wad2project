@@ -31,6 +31,7 @@ ratings = [('1', '1'), ('2', '2'), ('3', '3'), ('4', '4'), ('5', '5')]
 
 class UserForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput())
+    producer = forms.BooleanField(label="Are you a producer")
 
     class Meta:
         model = User
@@ -45,10 +46,10 @@ class UserProfileForm(forms.ModelForm):
 
 class MovieForm(forms.ModelForm):
     name = forms.CharField(max_length=128, help_text="Please, enter the name of the movie.", required=True)
-    release_date = forms.DateField(help_text="Please, select the release date.", initial="Unknown", required=False)
+    release_date = forms.DateField(help_text="Please, select the release date.", widget=forms.SelectDateWidget(years=range(1900, 2100)), required=False)
     actors = forms.CharField(max_length=256, help_text="Please, enter list of actors.", required=False)
     trailer = forms.URLField(max_length=128, help_text="Please, enter the trailer link.", required=False)
-    genre = forms.ChoiceField(label="Genre", widget=forms.CheckboxInput, choices=genres, help_text="Please, select movie genre.")
+    genre = forms.ChoiceField(label="Genre", choices=genres, help_text="Please, select movie genre.")
     description = forms.CharField(max_length=1024, widget=forms.Textarea, required=False)
     slug = forms.SlugField(widget=forms.HiddenInput(), required=False)
 
