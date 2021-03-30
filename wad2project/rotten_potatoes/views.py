@@ -355,7 +355,7 @@ def get_movie_context(movie_name_slug):
     context_dictionary = {}
     try:
         # Get movie object to get details
-        movie_obj = Movie.objects.annotate(avg_rating=Avg('rating__rating')).anotate(num_of_ratings=Count('rating'))
+        movie_obj = Movie.objects.annotate(avg_rating=Avg('rating__rating')).annotate(num_of_ratings=Count('rating'))
         # Get average rating and number of ratings
         movie_obj = movie_obj.objects.get(slug=movie_name_slug)
 
