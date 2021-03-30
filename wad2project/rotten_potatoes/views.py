@@ -11,6 +11,7 @@ from django.utils.timezone import now
 
 
 def index(request):
+    
     try:
         # Query the top 5 movies
         top_movies = Movie.objects.annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[:5]
@@ -57,6 +58,11 @@ def register(request):
             user.save()
             profile = profile_form.save(commit=False)
             profile.user = user
+
+            if request.POST['producer'] == "Yes":
+                profile.producer = True
+            else:
+                profile.producer = False
 
             if 'picture' in request.FILES:
                 profile.picture = request.FILES['picture']
@@ -152,9 +158,9 @@ def edit_movie(request, movie_name_slug):
     movie_obj = Movie.objects.get(slug=movie_name_slug)
 
     # Check if user is not the movie producer and admin
-    if request.user.pk != movie_obj.user.pk and not request.user.is_superuser():
+    if UserProfile.objects.get(user=request.user) != movie_obj.producer and not request.user.is_superuser:
         print("Permission to edit denied.")
-        redirect("/rotten_potatoes/")
+        return redirect("/rotten_potatoes/")
 
     if request.method == "GET":
         # Fill initial dictionary with pre-existing values
@@ -171,6 +177,7 @@ def edit_movie(request, movie_name_slug):
         # Get context dict. with movie and form info
         context_dict = get_movie_context(movie_name_slug)
         context_dict["form"] = form
+        context_dict["movie"] = movie_name_slug
         return render(request, "rotten_potatoes/edit.html", context_dict)
 
     if request.method == "POST":
@@ -200,7 +207,7 @@ def add_comment(request, movie_name_slug):
 
         if form.is_valid():
             comment = form.save(commit=False)
-            comment.user = request.user
+            comment.user = UserProfile.objects.get(user=request.user)
             comment.movie = Movie.objects.get(slug=movie_name_slug)
             comment.time_posted = now()
             comment.save()
@@ -209,7 +216,8 @@ def add_comment(request, movie_name_slug):
         else:
             print(form.errors)
 
-    return render(request, "rotten_potatoes/addcomment.html", context={"form": form})
+    return render(request, "rotten_potatoes/addcomment.html", context={"form": form,
+                                                                       "movie": Movie.objects.get(slug=movie_name_slug)})
 
 
 @login_required
@@ -218,7 +226,7 @@ def rate_movie(request, movie_name_slug):
     if not check_movie_exists(movie_name_slug):
         return HttpResponse("Movie " + movie_name_slug + " does not exist.")
 
-    if request.user.pk == Movie.objects.get(slug=movie_name_slug).producer.pk:
+    if UserProfile.objects.get(user=request.user).pk == Movie.objects.get(slug=movie_name_slug).producer.pk:
         return HttpResponse("You can NOT rate your own movie.")
 
     form = AddRatingForm()
@@ -244,23 +252,22 @@ def rate_movie(request, movie_name_slug):
 
 @login_required
 def add_movie(request):
+    if not UserProfile.objects.get(user=request.user).producer:
+        return HttpResponse("Sorry, you cant add movies")
+
     form = MovieForm()
 
     if request.method == "POST":
-        if not UserProfile(user=request.user).producer:
-            pass
-            # return HttpResponse("Sorry, you cant add movies")
-
         form = MovieForm(request.POST)
 
         if form.is_valid():
             movie_form = form.save(commit=False)
             # Set producer and datetime before saving to database
-            movie_form.user = request.user
+            movie_form.producer = UserProfile.objects.get(user=request.user)
             movie_form.upload_date = now()
             movie_form.save()
 
-            return redirect('/rotten_potatoes/')
+            return redirect(reverse('rotten_potatoes:movie', kwargs={"movie_name_slug": movie_form.slug}))
         else:
             print(form.errors)
 
@@ -274,7 +281,7 @@ def account(request):
         profile = UserProfile.objects.get(user=request.user)
         context_dict = get_user_context(profile)
         try:
-            movies = Movie.objects.get(producer=UserProfile.objects.get(user=request.user))
+            movies = Movie.objects.filter(producer=UserProfile.objects.get(user=request.user))
             context_dict['movies'] = movies
         except Movie.DoesNotExist:
             context_dict['movies'] = None
