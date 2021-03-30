@@ -10,7 +10,15 @@
 	<h3>Movie here</h3>
 	
 	<a class="emt" href="{% url 'rotten_potatoes:add_comment' movie.slug %}">Comment</a>
-	
+	<p>
+		Avg. Rating: {{ movie.avg_rating }}
+	</p>
+	<p>
+		Number Of Ratings: {{ movie.num_of_ratings }}
+	</p>
+	<p>
+		Producer: {{ movie.producer }}
+	</p>
 	<ul>
 	{% if comments %}
 		{% for c in comments %}
