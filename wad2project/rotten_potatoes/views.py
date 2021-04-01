@@ -11,6 +11,7 @@ from django.utils.timezone import now
 
 
 def index(request):
+    
     try:
         # Query the top 5 movies
         top_movies = Movie.objects.annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[:5]
@@ -19,9 +20,10 @@ def index(request):
         recently_added = Movie.objects.filter(upload_date__gte=datetime.now() - timedelta(days=14))
 
         # Change this weeks favorite to this years favorite #
-        current_year = datetime.now().date().strftime("%Y")   # Get current year
-        this_years_favorite = Movie.objects.filter(release_date__range=[current_year + '-01-01', current_year + '-12-31']).\
-            annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
+        current_year = datetime.now().date().strftime("%Y")  # Get current year
+        this_years_favorite = \
+            Movie.objects.filter(release_date__range=[current_year + '-01-01', current_year + '-12-31']). \
+                annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
 
         context_dictionary = {
             "top_movies": top_movies,
@@ -56,6 +58,11 @@ def register(request):
             user.save()
             profile = profile_form.save(commit=False)
             profile.user = user
+
+            if request.POST['producer'] == "Yes":
+                profile.producer = True
+            else:
+                profile.producer = False
 
             if 'picture' in request.FILES:
                 profile.picture = request.FILES['picture']
@@ -131,7 +138,7 @@ def movie(request, movie_name_slug):
     context_dictionary = get_movie_context(movie_name_slug)
 
     try:
-        context_dictionary["comments"] = Comment.objects.filter(movie=Movie.object.get(slug=movie_name_slug))
+        context_dictionary["comments"] = Comment.objects.filter(movie=Movie.objects.get(slug=movie_name_slug))
     except Comment.DoesNotExist:
         context_dictionary["comments"] = None
 
@@ -148,19 +155,18 @@ def edit_movie(request, movie_name_slug):
     if not check_movie_exists(movie_name_slug):
         return HttpResponse("Movie " + movie_name_slug + " does not exist.")
 
-    movie_obj = Movie.object.get(slug=movie_name_slug)
+    movie_obj = Movie.objects.get(slug=movie_name_slug)
 
     # Check if user is not the movie producer and admin
-    if request.user.pk != movie_obj.user.pk and not request.user.is_superuser():
+    if UserProfile.objects.get(user=request.user) != movie_obj.producer and not request.user.is_superuser:
         print("Permission to edit denied.")
-        redirect("/rotten_potatoes/")
+        return redirect("/rotten_potatoes/")
 
     if request.method == "GET":
         # Fill initial dictionary with pre-existing values
         initial_dict["name"] = movie_obj.name
         initial_dict["release_date"] = movie_obj.release_date
         initial_dict["actors"] = movie_obj.actors
-        initial_dict["producer"] = movie_obj.producer
         initial_dict["trailer"] = movie_obj.trailer
         initial_dict["genre"] = movie_obj.genre
         initial_dict["description"] = movie_obj.description
@@ -171,6 +177,7 @@ def edit_movie(request, movie_name_slug):
         # Get context dict. with movie and form info
         context_dict = get_movie_context(movie_name_slug)
         context_dict["form"] = form
+        context_dict["movie"] = movie_name_slug
         return render(request, "rotten_potatoes/edit.html", context_dict)
 
     if request.method == "POST":
@@ -179,9 +186,8 @@ def edit_movie(request, movie_name_slug):
         if form.is_valid():
             form = EditMovieForm(request.POST, instance=movie_obj)
             form.save()
-            context_dictionary = get_movie_context(movie_name_slug)
 
-            return render(request, "rotten_potatoes/movie.html", context_dictionary)
+            return redirect(reverse("rotten_potatoes:movie", kwargs={"movie_name_slug": movie_name_slug}))
 
         else:
             print(form.errors)
@@ -201,16 +207,17 @@ def add_comment(request, movie_name_slug):
 
         if form.is_valid():
             comment = form.save(commit=False)
-            comment.user = request.user
-            comment.movie = Movie.object.get(slug=movie_name_slug)
+            comment.user = UserProfile.objects.get(user=request.user)
+            comment.movie = Movie.objects.get(slug=movie_name_slug)
             comment.time_posted = now()
             comment.save()
 
-            return movie(request, movie_name_slug)
+            return redirect(reverse('rotten_potatoes:movie', kwargs={"movie_name_slug": movie_name_slug}))
         else:
             print(form.errors)
 
-    return render(request, "rotten_potatoes/addcomment.html", {"form": form})
+    return render(request, "rotten_potatoes/addcomment.html", context={"form": form,
+                                                                       "movie": Movie.objects.get(slug=movie_name_slug)})
 
 
 @login_required
@@ -219,7 +226,7 @@ def rate_movie(request, movie_name_slug):
     if not check_movie_exists(movie_name_slug):
         return HttpResponse("Movie " + movie_name_slug + " does not exist.")
 
-    if request.user.pk == Movie.object.get(slug=movie_name_slug).producer.pk:
+    if UserProfile.objects.get(user=request.user).pk == Movie.objects.get(slug=movie_name_slug).producer.pk:
         return HttpResponse("You can NOT rate your own movie.")
 
     form = AddRatingForm()
@@ -227,12 +234,12 @@ def rate_movie(request, movie_name_slug):
         form = AddRatingForm(request.POST)
         if form.is_valid():
             rating_obj = form.save(commit=False)
-            rating_obj.user = request.user
-            rating_obj.movie = Movie.object.get(slug=movie_name_slug)
-            rating_obj.rating = int(form.rating)
+            rating_obj.user = UserProfile.objects.get(user=request.user)
+            rating_obj.movie = Movie.objects.get(slug=movie_name_slug)
             rating_obj.save()
 
-            return redirect("/rotten_potatoes/")
+            return redirect(reverse('rotten_potatoes:movie',
+                                    kwargs={'movie_name_slug': movie_name_slug}))
         else:
             print(form.errors)
             return HttpResponse(form.errors)
@@ -245,22 +252,22 @@ def rate_movie(request, movie_name_slug):
 
 @login_required
 def add_movie(request):
+    if not UserProfile.objects.get(user=request.user).producer:
+        return HttpResponse("Sorry, you cant add movies")
+
     form = MovieForm()
 
     if request.method == "POST":
-        if not request.user.producer:
-            return redirect('/rotten_potatoes/')
-
         form = MovieForm(request.POST)
 
         if form.is_valid():
             movie_form = form.save(commit=False)
             # Set producer and datetime before saving to database
-            movie_form.user = request.user
+            movie_form.producer = UserProfile.objects.get(user=request.user)
             movie_form.upload_date = now()
             movie_form.save()
 
-            return redirect('/rotten_potatoes/')
+            return redirect(reverse('rotten_potatoes:movie', kwargs={"movie_name_slug": movie_form.slug}))
         else:
             print(form.errors)
 
@@ -274,7 +281,7 @@ def account(request):
         profile = UserProfile.objects.get(user=request.user)
         context_dict = get_user_context(profile)
         try:
-            movies = Movie.objects.get(producer=UserProfile.objects.get(user=request.user))
+            movies = Movie.objects.filter(producer=UserProfile.objects.get(user=request.user))
             context_dict['movies'] = movies
         except Movie.DoesNotExist:
             context_dict['movies'] = None
@@ -299,7 +306,7 @@ def edit_account(request):
             # Save form
             form.save()
 
-            redirect('/rotten_potatoes/')
+            return redirect(reverse("rotten_potatoes:account"))
         else:
             return HttpResponse(form.errors)
 
@@ -314,7 +321,7 @@ def edit_account(request):
 
         context_dict = get_user_context(profile)
         context_dict["form"] = form
-        return render(request, 'rotten_potatoes/edit.html', context_dict)
+        return render(request, 'rotten_potatoes/editaccount.html', context_dict)
 
 
 # Ratings view with default sorting by movie rating
@@ -326,7 +333,7 @@ def ratings(request):
 
         current_year = datetime.now().date().strftime("%Y")  # Get current year
         # get this years favorite
-        this_years_favorite = Movie.objects.filter(release_date__gte=current_year + '-01-01').\
+        this_years_favorite = Movie.objects.filter(release_date__gte=current_year + '-01-01'). \
             annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
 
         clean_data = form.cleaned_data()
@@ -358,12 +365,11 @@ def get_movie_context(movie_name_slug):
         movie_obj = Movie.objects.annotate(avg_rating=Avg('rating__rating')).annotate(num_of_ratings=Count('rating'))
         # Get average rating and number of ratings
         movie_obj = movie_obj.get(slug=movie_name_slug)
-        
+
         #Convert url into embedded video link
         url = movie_obj.trailer
         x = link.split("=")
         newLink = "https://www.youtube.com/embed/" + x[1]
-
 
         # In a context dict. store all the details about movie in a list
         context_dictionary = {

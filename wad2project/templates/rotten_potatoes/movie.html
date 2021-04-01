@@ -12,14 +12,17 @@
 		<a class="emt" href="{% url 'rotten_potatoes:add_comment' movie.slug %}">Comment</a>
 	</div>
 	
+
 	<div>
 		<p>Release Date = {{ movie.release_date }}</p>
 		<p>Actors = {{ movie.actors }}</p>
-		<p>genre = {{ movie.genre }}</p>
-		<p>description = {{ movie.description }}</p>
+		<p>Genre = {{ movie.genre }}</p>
+		<p>Description = {{ movie.description }}</p>
 		<p>Uploaded = {{ movie.upload_date }}</p>
+    <p>Average Rating = {{ movie.avg_rating }} </p>
+    <p>Number Of Ratings = {{ movie.num_of_ratings }} </p>
 	</div>
-	
+
 	<ul>
 	{% if comments %}
 		{% for c in comments %}

@@ -7,14 +7,14 @@
 
 {% block body_block %}
 	<h1>Hello {{ user.username }}</h1>
-	
+
 	<a class="emt" href="{% url 'rotten_potatoes:edit_account' %}">Edit Details</a>
 	
-	{% if movies %}
+	{% if added_movies %}
 	<h3>Your movies</h3>
 	
 	<ul>
-		{% for m in movies %}
+		{% for m in added_movies %}
 			<li>{{ m.name }}</li>
 		{% endfor %}
 	</ul>

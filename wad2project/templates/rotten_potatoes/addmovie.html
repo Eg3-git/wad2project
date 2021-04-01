@@ -10,7 +10,7 @@
 		<form
 			id="form"
 			method="post"
-			action="{% url 'rotten_potatoes:add_movie' movie.slug %}"
+			action="{% url 'rotten_potatoes:add_movie' %}"
 			enctype="multipart/form-data"
 			class="auto-form">
 				{% csrf_token %}
