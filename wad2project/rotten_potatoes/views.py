@@ -373,7 +373,7 @@ def get_movie_context(movie_name_slug):
 
         # In a context dict. store all the details about movie in a list
         context_dictionary = {
-            "movie": movie_obj
+            "movie": movie_obj,
             "urlLink": newLink
         }
 
