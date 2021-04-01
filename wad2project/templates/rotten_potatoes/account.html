@@ -15,7 +15,7 @@
 	
 	<ul>
 		{% for m in added_movies %}
-			<li>{{ m.name }}</li>
+			<li><a class="mov" href="{% url 'rotten_potatoes:movie' m.slug %}">{{ m.name }}</a></li>
 		{% endfor %}
 	</ul>
 	{% endif %}

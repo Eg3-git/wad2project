@@ -10,6 +10,7 @@
 		<h1>{{ movie.name }}</h1>
 		<iframe width="560" height="315" src={{ urlLink }} frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 		<a class="emt" href="{% url 'rotten_potatoes:add_comment' movie.slug %}">Comment</a>
+		<a class="emt" href="{% url 'rotten_potatoes:rate_movie' movie.slug %}">Rate this Video!!</a>
 	</div>
 	
 
@@ -23,11 +24,14 @@
     <p>Number Of Ratings = {{ movie.num_of_ratings }} </p>
 	</div>
 
-	<ul>
+	
 	{% if comments %}
+		<p>Comments</p>
+		<ul>
 		{% for c in comments %}
-			<li>{{ c.user }}" - "{{ c.text }}</li>
+			<li>{{ c.user }} - {{ c.text }}</li>
 		{% endfor %}
+		</ul>
 	{% endif %}
-	</ul>
+	
 {% endblock %}
