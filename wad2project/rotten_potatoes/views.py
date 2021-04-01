@@ -25,11 +25,18 @@ def index(request):
             Movie.objects.filter(release_date__range=[current_year + '-01-01', current_year + '-12-31']). \
                 annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
 
+
         context_dictionary = {
             "top_movies": top_movies,
             "recently_added": recently_added,
             "this_years_favorite": this_years_favorite,
         }
+        
+        try:
+            prof = UserProfile.objects.get(user=request.user)
+            context_dictionary['is_producer'] = prof.producer
+        except:
+            context_dictionary['is_producer'] = False
 
         return render(request, "rotten_potatoes/index.html", context_dictionary)
 
@@ -368,7 +375,7 @@ def get_movie_context(movie_name_slug):
 
         #Convert url into embedded video link
         url = movie_obj.trailer
-        x = link.split("=")
+        x = url.split("=")
         newLink = "https://www.youtube.com/embed/" + x[1]
 
         # In a context dict. store all the details about movie in a list
