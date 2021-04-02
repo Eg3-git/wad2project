@@ -21,8 +21,8 @@ def index(request):
         # Change this weeks favorite to this years favorite #
         current_year = datetime.now().date().strftime("%Y")  # Get current year
         this_years_favorite = \
-        Movie.objects.filter(release_date__range=[current_year + '-01-01', current_year + '-12-31']). \
-            annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
+            Movie.objects.filter(release_date__range=[current_year + '-01-01', current_year + '-12-31']). \
+                annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
 
         context_dictionary = {
             "top_movies": top_movies,
@@ -148,7 +148,7 @@ def movie(request, movie_name_slug):
 
     try:
         context_dictionary["comments"] = Comment.objects.filter(movie=Movie.objects.get(slug=movie_name_slug))
-    except Comment.DoesNotExist:
+    except:
         context_dictionary["comments"] = None
 
     # Render movie page with context dict. information passed
@@ -296,7 +296,6 @@ def add_movie(request):
 
 @login_required
 def account(request):
-    print(UserProfile.objects.get(user=request.user).profile_pic)
     context_dict = {}
     try:
         profile = UserProfile.objects.get(user=request.user)
@@ -304,10 +303,10 @@ def account(request):
         try:
             movies = Movie.objects.filter(producer=UserProfile.objects.get(user=request.user))
             context_dict['movies'] = movies
-        except Movie.DoesNotExist:
+        except:
             context_dict['movies'] = None
 
-    except UserProfile.DoesNotExist:
+    except:
         context_dict["profile"] = None
 
     return render(request, "rotten_potatoes/account.html", context_dict)
@@ -373,7 +372,7 @@ def ratings(request):
                 "this_years_favorite": this_years_favorite,
             }
 
-        except Movie.DoesNotExist:
+        except:
             context_dict = {
                 "form": form,
                 "movie_list": None,
@@ -394,31 +393,27 @@ def get_movie_context(movie_name_slug):
         movie_obj = Movie.objects.annotate(avg_rating=Avg('rating__rating')).annotate(num_of_ratings=Count('rating'))
         # Get average rating and number of ratings
         movie_obj = movie_obj.get(slug=movie_name_slug)
-        
+
         context_dictionary = {
             "movie": movie_obj,
         }
 
-
-        #Convert url into embedded video link
+        # Convert url into embedded video link
         try:
             url = movie_obj.trailer
             x = url.split("=")
-            newLink = "https://www.youtube.com/embed/" + x[1]
-        
+            newLink = "https://www.youtube.com/embed/" + x[-1]
+
             context_dictionary['urlLink'] = newLink
 
         # Convert url into embedded video link
-        
-
         except:
             newLink = "https://www.youtube.com/embed/dQw4w9WgXcQ"
             context_dictionary['urlLink'] = newLink
         # In a context dict. store all the details about movie in a list
-        
 
     # If movie object does not exist, set movie details to None
-    except Movie.DoesNotExist:
+    except:
         context_dictionary["movie"] = None
 
     return context_dictionary
@@ -444,7 +439,7 @@ def check_movie_exists(movie_name_slug):
     try:
         Movie.objects.get(slug=movie_name_slug)
         return True
-    except Movie.DoesNotExist:
+    except:
         return False
 
 
