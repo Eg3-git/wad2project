@@ -7,6 +7,13 @@
 
 {% block body_block %}
 	<h1>Login Here!</h1>
+	<p>
+		{% if messages %}
+			{% for message in messages%}
+				{{ message }}
+			{% endfor %}
+		{% endif %}
+	</p>
 	<form id="login_form" method="post" action="{% url 'rotten_potatoes:login' %}">
 		{% csrf_token %}
 		<label for="username">Username:</label>

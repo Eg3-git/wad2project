@@ -7,10 +7,16 @@
 
 {% block body_block %}
 	<div>
+		{% if messages %}
+			{% for message in messages %}
+				{{ message }}
+			{% endfor %}
+		{% endif %}
 		<h1>{{ movie.name }}</h1>
 		<iframe width="560" height="315" src={{ urlLink }} frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 		<a class="emt" href="{% url 'rotten_potatoes:add_comment' movie.slug %}">Comment</a>
-		<a class="emt" href="{% url 'rotten_potatoes:rate_movie' movie.slug %}">Rate this Video!!</a>
+		<a class="emt" href="{% url 'rotten_potatoes:rate_movie' movie.slug %}">Rate Movie</a>
+		<a class="emt" href="{% url 'rotten_potatoes:edit_movie' movie.slug %}">Edit Movie</a>
 	</div>
 	
 
@@ -33,5 +39,4 @@
 		{% endfor %}
 		</ul>
 	{% endif %}
-	
 {% endblock %}
