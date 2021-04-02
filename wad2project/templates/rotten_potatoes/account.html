@@ -7,7 +7,7 @@
 
 {% block body_block %}
 	<h1>{{ user.username }}</h1>
-	<p><img src="{{ MEDIA_URL }}profile_images/{{ profile.profile_pic.url }}" alt="Profile Picture"/></p>
+	<p><img src="{{ MEDIA_URL }}{{profile.profile_pic}}" alt="Profile Picture"/></p>
 	<a class="emt" href="{% url 'rotten_potatoes:edit_account' %}">Edit Details</a>
 	
 	{% if added_movies %}
