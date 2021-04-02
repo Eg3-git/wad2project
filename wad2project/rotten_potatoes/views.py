@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.db.models import Count, Avg
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
@@ -11,7 +12,6 @@ from django.utils.timezone import now
 
 
 def index(request):
-    
     try:
         # Query the top 5 movies
         top_movies = Movie.objects.annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[:5]
@@ -21,20 +21,19 @@ def index(request):
 
         # Change this weeks favorite to this years favorite #
         current_year = datetime.now().date().strftime("%Y")  # Get current year
-        this_years_favorite = \
-            Movie.objects.filter(release_date__range=[current_year + '-01-01', current_year + '-12-31']). \
-                annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
-
+        this_years_favorite = Movie.objects.filter(release_date__range=[current_year + '-01-01', current_year + '-12-31']).\
+            annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
 
         context_dictionary = {
             "top_movies": top_movies,
             "recently_added": recently_added,
             "this_years_favorite": this_years_favorite,
         }
-        
+
+        # Check if user is producer or not
         try:
-            prof = UserProfile.objects.get(user=request.user)
-            context_dictionary['is_producer'] = prof.producer
+            profile = UserProfile.objects.get(user=request.user)
+            context_dictionary['is_producer'] = profile.producer
         except:
             context_dictionary['is_producer'] = False
 
@@ -65,14 +64,14 @@ def register(request):
             user.save()
             profile = profile_form.save(commit=False)
             profile.user = user
-
+            # Check if user is producer or not
             if request.POST['producer'] == "Yes":
                 profile.producer = True
             else:
                 profile.producer = False
 
-            if 'picture' in request.FILES:
-                profile.picture = request.FILES['picture']
+            if 'profile_pic' in request.FILES:
+                profile.profile_pic = request.FILES['profile_pic']
 
             profile.save()
             registered = True
@@ -116,11 +115,13 @@ def user_login(request):
                 return redirect(reverse('rotten_potatoes:index'))
             else:
                 # An inactive account was used - no logging in!
-                return HttpResponse("Your Rotten Potatoes account is disabled.")
+                messages.error(request, "Your Rotten Potatoes account is disabled")
+                return redirect(reverse("rotten_potatoes:login"))
         else:
             # Bad login details were provided. So we can't log the user in.
             print(f"Invalid login details: {username}, {password}")
-            return HttpResponse("Invalid login details supplied.")
+            messages.error(request, "Invalid login details")
+            return redirect(reverse("rotten_potatoes:login"))
     # The request is not a HTTP POST, so display the login form
     # This scenario would most likely be a HTTP GET.
     else:
@@ -140,7 +141,8 @@ def user_logout(request):
 def movie(request, movie_name_slug):
     # Get movie from the database, if not present return HttpResponse
     if not check_movie_exists(movie_name_slug):
-        return HttpResponse("Movie " + movie_name_slug + " does not exist.")
+        messages.error(request, "Sorry, movie you tried to access does not exists")
+        return redirect("/rotten_potatoes/")
 
     context_dictionary = get_movie_context(movie_name_slug)
 
@@ -160,13 +162,14 @@ def edit_movie(request, movie_name_slug):
 
     # Get movie from the database, if not present return HttpResponse
     if not check_movie_exists(movie_name_slug):
-        return HttpResponse("Movie " + movie_name_slug + " does not exist.")
+        messages.error(request, "Sorry, movie you tried to access does not exists")
+        return redirect("/rotten_potatoes/")
 
     movie_obj = Movie.objects.get(slug=movie_name_slug)
 
     # Check if user is not the movie producer and admin
     if UserProfile.objects.get(user=request.user) != movie_obj.producer and not request.user.is_superuser:
-        print("Permission to edit denied.")
+        messages.error(request, "You are not allowed to edit this movie")
         return redirect("/rotten_potatoes/")
 
     if request.method == "GET":
@@ -188,7 +191,7 @@ def edit_movie(request, movie_name_slug):
         return render(request, "rotten_potatoes/edit.html", context_dict)
 
     if request.method == "POST":
-        form = EditMovieForm(request.POST)
+        form = EditMovieForm(request.POST, request.FILES)
 
         if form.is_valid():
             form = EditMovieForm(request.POST, instance=movie_obj)
@@ -205,7 +208,8 @@ def edit_movie(request, movie_name_slug):
 def add_comment(request, movie_name_slug):
     # Check if movie exists
     if not check_movie_exists(movie_name_slug):
-        return HttpResponse("Movie " + movie_name_slug + " does not exist")
+        messages.error(request, "Sorry, movie you tried to access does not exists")
+        return redirect("/rotten_potatoes/")
 
     form = AddCommentForm()
 
@@ -224,17 +228,21 @@ def add_comment(request, movie_name_slug):
             print(form.errors)
 
     return render(request, "rotten_potatoes/addcomment.html", context={"form": form,
-                                                                       "movie": Movie.objects.get(slug=movie_name_slug)})
+                                                                       "movie": Movie.objects.get(
+                                                                           slug=movie_name_slug)})
 
 
 @login_required
 def rate_movie(request, movie_name_slug):
     # Check if movie exists
     if not check_movie_exists(movie_name_slug):
-        return HttpResponse("Movie " + movie_name_slug + " does not exist.")
+        messages.error(request, "Sorry, movie you tried to access does not exists")
+        return redirect("/rotten_potatoes/")
 
+    # Check if user is not producer of the movie (producers cant rate their own movie)
     if UserProfile.objects.get(user=request.user).pk == Movie.objects.get(slug=movie_name_slug).producer.pk:
-        return HttpResponse("You can NOT rate your own movie.")
+        messages.error(request, "You can not rate your own movie")
+        return redirect(reverse("rotten_potatoes:movie", kwargs={"movie_name_slug": movie_name_slug}))
 
     form = AddRatingForm()
     if request.method == "POST":
@@ -260,7 +268,8 @@ def rate_movie(request, movie_name_slug):
 @login_required
 def add_movie(request):
     if not UserProfile.objects.get(user=request.user).producer:
-        return HttpResponse("Sorry, you cant add movies")
+        messages.error(request, "Sorry, you can not add a movie")
+        return redirect("/rotten_potatoes/")
 
     form = MovieForm()
 
@@ -272,6 +281,10 @@ def add_movie(request):
             # Set producer and datetime before saving to database
             movie_form.producer = UserProfile.objects.get(user=request.user)
             movie_form.upload_date = now()
+
+            if 'cover' in request.FILES:
+                movie_form.cover = request.FILES['cover']
+
             movie_form.save()
 
             return redirect(reverse('rotten_potatoes:movie', kwargs={"movie_name_slug": movie_form.slug}))
@@ -294,7 +307,7 @@ def account(request):
             context_dict['movies'] = None
 
     except UserProfile.DoesNotExist:
-        context_dict["user_details"] = None
+        context_dict["profile"] = None
 
     return render(request, "rotten_potatoes/account.html", context_dict)
 
@@ -304,7 +317,7 @@ def edit_account(request):
     form = EditAccountForm()
 
     if request.method == "POST":
-        form = EditAccountForm(request.POST)
+        form = EditAccountForm(request.POST, request.FILES)
         if form.is_valid():
             # Retrieve pk of user
             profile = UserProfile.objects.get(user=request.user)
@@ -377,6 +390,7 @@ def get_movie_context(movie_name_slug):
             "movie": movie_obj,
         }
 
+
         #Convert url into embedded video link
         try:
             url = movie_obj.trailer
@@ -384,6 +398,9 @@ def get_movie_context(movie_name_slug):
             newLink = "https://www.youtube.com/embed/" + x[1]
         
             context_dictionary['urlLink'] = newLink
+
+        # Convert url into embedded video link
+        
 
         except:
             newLink = "https://www.youtube.com/embed/dQw4w9WgXcQ"
@@ -420,3 +437,4 @@ def check_movie_exists(movie_name_slug):
         return True
     except Movie.DoesNotExist:
         return False
+2

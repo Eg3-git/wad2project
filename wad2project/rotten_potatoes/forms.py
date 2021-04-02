@@ -38,7 +38,8 @@ class UserForm(forms.ModelForm):
 
 
 class UserProfileForm(forms.ModelForm):
-    producer = forms.ChoiceField(choices=[("Yes", "Yes"), ("No", "No")])
+    producer = forms.ChoiceField(choices=[("No", "No"), ("Yes", "Yes")])
+
     class Meta:
         model = UserProfile
         fields = ('profile_pic', 'description',)
@@ -60,7 +61,7 @@ class MovieForm(forms.ModelForm):
 
 class EditMovieForm(forms.ModelForm):
     name = forms.CharField(max_length=128, help_text="Please, enter the name of the movie.", required=True)
-    release_date = forms.DateField(help_text="Please, select the release date.", initial="Unknown", required=False)
+    release_date = forms.DateField(help_text="Please, select the release date.", widget=forms.SelectDateWidget(years=range(1900, 2100)), required=False)
     actors = forms.CharField(max_length=256, help_text="Please, enter list of actors.", required=False)
     trailer = forms.URLField(max_length=128, help_text="Please, enter the trailer link.", required=False)
     genre = forms.ChoiceField(label="Genre", choices=genres, help_text="Please, select movie genre.")

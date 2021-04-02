@@ -7,7 +7,13 @@
 
 {% block body_block %}
 	<h1>Welcome to Rotten Potatoes</h1>
-		
+	<p>
+		{% if messages %}
+			{% for message in messages %}
+				{{ message }}
+			{% endfor %}
+		{% endif %}
+	</p>
 	<div id="hrzContainer">
 		<div id="left"><p>Top Movies</p>
 			<ul>
