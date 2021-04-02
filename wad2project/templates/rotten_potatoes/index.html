@@ -6,7 +6,9 @@
 {% endblock %}
 
 {% block body_block %}
-	<h1>Welcome to Rotten Potatoes</h1>
+	<div class="text-center my-5">
+		<h1 class="display-1">Welcome to Rotten Potatoes</h1>
+	</div>
 	<p>
 		{% if messages %}
 			{% for message in messages %}
@@ -14,33 +16,43 @@
 			{% endfor %}
 		{% endif %}
 	</p>
-	<div id="hrzContainer">
-		<div id="left"><p>Top Movies</p>
-			<ul>
-			{% for m in top_movies %}
-				<li><a class="mov" href="{% url 'rotten_potatoes:movie' m.slug %}">{{ m.name }}</a></li>
-			{% endfor %}
-			</ul>
-		</div>
-			
-		<div id="middle"><p>Recently Added</p>
-			<ul>
-			{% for m in recently_added %}
-				<li><a class="mov" href="{% url 'rotten_potatoes:movie' m.slug %}">{{ m.name }}</a></li>
-			{% endfor %}
-			</ul>
-		</div>
-			
-		<div id="right"><p>This years's Favourite</p>
-			<li><a class="mov" href="{% url 'rotten_potatoes:movie' this_years_favorite.slug %}">{{ this_years_favorite.name }}</a></li>
+	<div class="container">
+		<div class="row">
+			<div class="col-md">
+				<p class="text-center display-6">Top Movies</p>
+				<div class="card">
+				  <ul class="list-group list-group-flush">
+						{% for m in top_movies %}
+							<a class="list-group-item" href="{% url 'rotten_potatoes:movie' m.slug %}">{{ m.name }}</a>
+						{% endfor %}
+				  </ul>
+				</div>
+			</div>
+			<div class="col-md">
+				<p class="text-center display-6">Recently Added</p>
+				<div class="card">
+				  <ul class="list-group list-group-flush">
+						{% for m in recently_added %}
+							<a class="list-group-item" href="{% url 'rotten_potatoes:movie' m.slug %}">{{ m.name }}</a>
+						{% endfor %}
+				  </ul>
+				</div>
+			</div>
+			<div class="col-md">
+				<p class="text-center display-6">This year's Favourite</p>
+				<div class="card">
+					<a href="{% url 'rotten_potatoes:movie' this_years_favorite.slug %}">
+				  	<img src="{{ MEDIA_URL }}{{ this_years_favorite.cover }}" class="card-img-top" alt="...">
+					</a>
+				  <div class="card-body">
+				    <h5 class="card-title">{{ this_years_favorite.name }}</h5>
+				  </div>
+				</div>
+			</div>
 		</div>
 	</div>
-	<div>
+
+	<!-- <div>
 		<iframe width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-	</div>
-	<div>
-		{% if is_producer %}
-				<a class="emt" href="{% url 'rotten_potatoes:add_movie' %}">Add</a>
-		{% endif %}
-	</div>
+	</div> -->
 {% endblock %}
