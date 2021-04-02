@@ -11,22 +11,22 @@
 	<div id="hrzContainer">
 		<div id="left"><p>Top Movies</p>
 			<ul>
-				<li>Movie 1</li>
-				<li>Movie 2</li>
-				<li>Movie 3</li>
+			{% for m in top_movies %}
+				<li><a class="mov" href="{% url 'rotten_potatoes:movie' m.slug %}">{{ m.name }}</a></li>
+			{% endfor %}
 			</ul>
 		</div>
 			
 		<div id="middle"><p>Recently Added</p>
 			<ul>
-				<li>Movie A</li>
-				<li>Movie B</li>
-				<li>Movie C</li>
+			{% for m in recently_added %}
+				<li><a class="mov" href="{% url 'rotten_potatoes:movie' m.slug %}">{{ m.name }}</a></li>
+			{% endfor %}
 			</ul>
 		</div>
 			
-		<div id="right"><p>This week's Favourite</p>
-			<p>Image Here</p>
+		<div id="right"><p>This years's Favourite</p>
+			<li><a class="mov" href="{% url 'rotten_potatoes:movie' this_years_favorite.slug %}">{{ this_years_favorite.name }}</a></li>
 		</div>
 	</div>
 	<div>
