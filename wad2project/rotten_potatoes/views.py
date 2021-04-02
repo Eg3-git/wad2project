@@ -3,7 +3,6 @@ from django.db.models import Count, Avg
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
-from rotten_potatoes.models import *
 from rotten_potatoes.forms import *
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
@@ -21,7 +20,8 @@ def index(request):
 
         # Change this weeks favorite to this years favorite #
         current_year = datetime.now().date().strftime("%Y")  # Get current year
-        this_years_favorite = Movie.objects.filter(release_date__range=[current_year + '-01-01', current_year + '-12-31']).\
+        this_years_favorite = \
+        Movie.objects.filter(release_date__range=[current_year + '-01-01', current_year + '-12-31']). \
             annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
 
         context_dictionary = {
@@ -40,11 +40,11 @@ def index(request):
         return render(request, "rotten_potatoes/index.html", context_dictionary)
 
     # If empty database, return none for all 3 queries
-    except Movie.DoesNotExist:
-        return render(request, "rotten_potatoes:index", {"top_movies": None,
-                                                         "recently_added": None,
-                                                         "this_years_favorite": None,
-                                                         })
+    except:
+        return render(request, "rotten_potatoes/index.html", {"top_movies": None,
+                                                              "recently_added": None,
+                                                              "this_years_favorite": None,
+                                                              })
 
 
 def about(request):
@@ -296,6 +296,7 @@ def add_movie(request):
 
 @login_required
 def account(request):
+    print(UserProfile.objects.get(user=request.user).profile_pic)
     context_dict = {}
     try:
         profile = UserProfile.objects.get(user=request.user)
@@ -349,27 +350,35 @@ def ratings(request):
     form = RatingsPageForm(request.POST or None)
 
     if form.is_valid():
-        movies = Movie.objects.annotate(avg_rating=Avg("rating__rating")).annotate(num_of_ratings=Count("rating"))
+        try:
+            movies = Movie.objects.annotate(avg_rating=Avg("rating__rating")).annotate(num_of_ratings=Count("rating"))
 
-        current_year = datetime.now().date().strftime("%Y")  # Get current year
-        # get this years favorite
-        this_years_favorite = Movie.objects.filter(release_date__gte=current_year + '-01-01'). \
-            annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
+            current_year = datetime.now().date().strftime("%Y")  # Get current year
+            # get this years favorite
+            this_years_favorite = Movie.objects.filter(release_date__gte=current_year + '-01-01'). \
+                annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
 
-        clean_data = form.cleaned_data()
-        sort_by = clean_data.get('sort_by')
-        genre = clean_data.get('genre')
+            clean_data = form.cleaned_data()
+            sort_by = clean_data.get('sort_by')
+            genre = clean_data.get('genre')
 
-        if genre is not None:
-            sorted_list = movies.filter(genre=genre).order_by(sort_by)
-        else:
-            sorted_list = movies.order_by(sort_by)
+            if genre is not None:
+                movie_list = movies.filter(genre=genre).order_by(sort_by)
+            else:
+                movie_list = movies.order_by(sort_by)
 
-        context_dict = {
-            "form": form,
-            "movie_list": sorted_list,
-            "this_years_favorite": this_years_favorite,
-        }
+            context_dict = {
+                "form": form,
+                "movie_list": movie_list,
+                "this_years_favorite": this_years_favorite,
+            }
+
+        except Movie.DoesNotExist:
+            context_dict = {
+                "form": form,
+                "movie_list": None,
+                "this_years_favorite": None,
+            }
 
         return render(request, "rotten_potatoes/ratings.html", context_dict)
 
@@ -427,4 +436,6 @@ def check_movie_exists(movie_name_slug):
         return True
     except Movie.DoesNotExist:
         return False
+
+
 2
