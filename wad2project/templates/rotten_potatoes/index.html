@@ -22,9 +22,13 @@
 				<p class="text-center display-6">Top Movies</p>
 				<div class="card">
 				  <ul class="list-group list-group-flush">
+					  {% if top_movies %}
 						{% for m in top_movies %}
 							<a class="list-group-item" href="{% url 'rotten_potatoes:movie' m.slug %}">{{ m.name }}</a>
 						{% endfor %}
+					  {% else %}
+					  	Sorry, there are no movies in the database.
+					  {% endif %}
 				  </ul>
 				</div>
 			</div>
@@ -32,22 +36,31 @@
 				<p class="text-center display-6">Recently Added</p>
 				<div class="card">
 				  <ul class="list-group list-group-flush">
+					   {% if recently_added %}
 						{% for m in recently_added %}
 							<a class="list-group-item" href="{% url 'rotten_potatoes:movie' m.slug %}">{{ m.name }}</a>
 						{% endfor %}
+					   {% else %}
+					  	There are no recently added movies.
+					   {% endif %}
 				  </ul>
 				</div>
 			</div>
 			<div class="col-md">
 				<p class="text-center display-6">This year's Favourite</p>
 				<div class="card">
-					<a href="{% url 'rotten_potatoes:movie' this_years_favorite.slug %}">
-				  	<img src="{{ MEDIA_URL }}{{ this_years_favorite.cover }}" class="card-img-top" alt="...">
-					</a>
-				  <div class="card-body">
-				    <h5 class="card-title">{{ this_years_favorite.name }}</h5>
-				  </div>
+					{% if this_years_favorite %}
+						<a href="{% url 'rotten_potatoes:movie' this_years_favorite.slug %}">
+						<img src="{{ MEDIA_URL }}{{ this_years_favorite.cover }}" class="card-img-top" alt="...">
+						</a>
+					  <div class="card-body">
+						<h5 class="card-title">{{ this_years_favorite.name }}</h5>
+					  </div>
+					{% else %}
+					  	No favorite movie for this year.
+					{% endif %}
 				</div>
+
 			</div>
 		</div>
 	</div>
