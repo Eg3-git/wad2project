@@ -22,8 +22,8 @@
 	<div class="container my-5">
 		<div class="row">
 			<div class="col-4">
-				<p class="display-6 text-center">Movie Name</p>
-				<img src="{{ MEDIA_URL }}{{ movie.cover }}" class="img-fluid" alt="Movie cover">
+				<p class="display-6 text-center">{{ movie.name }}</p>
+				<img src="{{ MEDIA_URL }}{{ movie.cover }}" class="img-fluid rounded" alt="Movie cover">
 			</div>
 			<div class="col-8">
 				<div class="row">
@@ -35,19 +35,36 @@
 						<p>Number of Ratings: {{ movie.num_of_ratings }}</p>
 					</div>
 				</div>
-				<div class="row">
+				<div class="row mt-5">
 					<div class="col">
-						<p>{{movie.description}}</p>
+						<p class="border border-dark border-3 rounded p-3">{{movie.description}}</p>
 					</div>
 				</div>
 			</div>
 		</div>
-		<div class="row">
-			<div class="col">
-
+		<div class="row mt-4">
+			<div class="col-6">
+				<ul class="ps-0" style="list-style-type: None;">
+					<li class="my-1">Release Date: {{ movie.release_date }}</li>
+					<li class="my-1">Actors: {{ movie.actors }}</li>
+					<li class="my-1">Genre: {{ movie.genre }}</li>
+					<li class="my-1">Uploaded: {{ movie.upload_date }}</li>
+				</ul>
 			</div>
-			<div class="col">
-
+			<div class="col-6">
+				<div class="row">
+					<p class="display-6">Comments</p>
+				</div>
+				<div class="row border border-dark border-3 rounded p-3">
+					<!-- <p class="border border-dark border-3 rounded p-3">{{movie.description}}</p> -->
+					{% if comments %}
+						<ul>
+						{% for c in comments %}
+							<li>{{ c.user }} - {{ c.text }}</li>
+						{% endfor %}
+						</ul>
+					{% endif %}
+				</div>
 			</div>
 		</div>
 	</div>
