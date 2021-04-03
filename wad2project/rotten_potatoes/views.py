@@ -229,10 +229,10 @@ def add_comment(request, movie_name_slug):
 
 
 @login_required
-def delete_comment(request, movie_name_slug):
+def delete_comment(request, movie_name_slug, comment_pk):
     # Check if user is associated with the comment
     user = UserProfile.objects.get(user=request.user)
-    comment = Comment.objects.get(user=user)
+    comment = Comment.objects.get(pk=comment_pk)
     if user != comment.user:
         messages.error(request, "You can not delete this comment")
         return redirect(reverse("rotten_potatoes:movie", kwargs={"movie_name_slug": movie_name_slug}))
