@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block body_block %}
-	<div>
+	<!-- <div>
 		{% if messages %}
 			{% for message in messages %}
 				{{ message }}
@@ -17,10 +17,47 @@
 		<a class="emt" href="{% url 'rotten_potatoes:add_comment' movie.slug %}">Comment</a>
 		<a class="emt" href="{% url 'rotten_potatoes:rate_movie' movie.slug %}">Rate Movie</a>
 		<a class="emt" href="{% url 'rotten_potatoes:edit_movie' movie.slug %}">Edit Movie</a>
-	</div>
-	
+	</div> -->
 
-	<div>
+	<div class="container my-5">
+		<div class="row">
+			<div class="col-4">
+				<p class="display-6 text-center">Movie Name</p>
+				<img src="{{ MEDIA_URL }}{{ movie.cover }}" class="img-fluid" alt="Movie cover">
+			</div>
+			<div class="col-8">
+				<div class="row">
+					<div class="col align-self-end">
+						<p class="display-6">Movie Description</p>
+					</div>
+					<div class="col">
+						<p>Rating: {{ movie.avg_rating }}</p>
+						<p>Number of Ratings: {{ movie.num_of_ratings }}</p>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col">
+						<p>{{movie.description}}</p>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col">
+
+			</div>
+			<div class="col">
+
+			</div>
+		</div>
+	</div>
+
+
+
+
+
+
+	<!-- <div>
 		<p>Release Date = {{ movie.release_date }}</p>
 		<p>Actors = {{ movie.actors }}</p>
 		<p>Genre = {{ movie.genre }}</p>
@@ -30,7 +67,7 @@
     <p>Number Of Ratings = {{ movie.num_of_ratings }} </p>
 	</div>
 
-	
+
 	{% if comments %}
 		<p>Comments</p>
 		<ul>
@@ -38,5 +75,5 @@
 			<li>{{ c.user }} - {{ c.text }}</li>
 		{% endfor %}
 		</ul>
-	{% endif %}
+	{% endif %} -->
 {% endblock %}
