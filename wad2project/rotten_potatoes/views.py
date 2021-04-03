@@ -11,40 +11,36 @@ from django.utils.timezone import now
 
 
 def index(request):
+    # Query the top 5 movies
+    top_movies = Movie.objects.annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[:5]
+
+    # Get movies which were uploaded in past 14 days
+    recently_added = Movie.objects.filter(upload_date__gte=datetime.now() - timedelta(days=14))
+
+    # Change this weeks favorite to this years favorite #
+    current_year = datetime.now().date().strftime("%Y")  # Get current year
     try:
-        # Query the top 5 movies
-        top_movies = Movie.objects.annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[:5]
-
-        # Get movies which were uploaded in past 14 days
-        recently_added = Movie.objects.filter(upload_date__gte=datetime.now() - timedelta(days=14))
-
-        # Change this weeks favorite to this years favorite #
-        current_year = datetime.now().date().strftime("%Y")  # Get current year
-        this_years_favorite = \
-            Movie.objects.filter(release_date__range=[current_year + '-01-01', current_year + '-12-31']). \
-                annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
-
-        context_dictionary = {
-            "top_movies": top_movies,
-            "recently_added": recently_added,
-            "this_years_favorite": this_years_favorite,
-        }
-
-        # Check if user is producer or not
-        try:
-            profile = UserProfile.objects.get(user=request.user)
-            context_dictionary['is_producer'] = profile.producer
-        except:
-            context_dictionary['is_producer'] = False
-
-        return render(request, "rotten_potatoes/index.html", context_dictionary)
-
-    # If empty database, return none for all 3 queries
+        this_years_favorite = Movie.objects.annotate(avg_rating=Avg('rating__rating'))
+        this_years_favorite = this_years_favorite.filter(release_date__range=
+                                                         [current_year + '-01-01',
+                                                          current_year + '-12-31']).order_by('-avg_rating')[0]
     except:
-        return render(request, "rotten_potatoes/index.html", {"top_movies": None,
-                                                              "recently_added": None,
-                                                              "this_years_favorite": None,
-                                                              })
+        this_years_favorite = None
+
+    context_dictionary = {
+        "top_movies": top_movies,
+        "recently_added": recently_added,
+        "this_years_favorite": this_years_favorite,
+    }
+
+    # Check if user is producer or not
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+        context_dictionary['is_producer'] = profile.producer
+    except:
+        context_dictionary['is_producer'] = False
+
+    return render(request, "rotten_potatoes/index.html", context_dictionary)
 
 
 def about(request):
@@ -233,6 +229,20 @@ def add_comment(request, movie_name_slug):
 
 
 @login_required
+def delete_comment(request, movie_name_slug):
+    # Check if user is associated with the comment
+    user = UserProfile.objects.get(user=request.user)
+    comment = Comment.objects.get(user=user)
+    if user != comment.user:
+        messages.error(request, "You can not delete this comment")
+        return redirect(reverse("rotten_potatoes:movie", kwargs={"movie_name_slug": movie_name_slug}))
+
+    comment.delete()
+    messages.success(request, "You have successfully deleted your comment")
+    return redirect(reverse("rotten_potatoes:movie", kwargs={"movie_name_slug": movie_name_slug}))
+
+
+@login_required
 def rate_movie(request, movie_name_slug):
     # Check if movie exists
     if not check_movie_exists(movie_name_slug):
@@ -292,6 +302,26 @@ def add_movie(request):
             print(form.errors)
 
     return render(request, 'rotten_potatoes/addmovie.html', {"form": form})
+
+
+@login_required
+def delete_movie(request, movie_name_slug):
+
+    # Get movie from the database, if not present return HttpResponse
+    if not check_movie_exists(movie_name_slug):
+        messages.error(request, "Sorry, movie you tried to access does not exists")
+        return redirect("/rotten_potatoes/")
+    movie_obj = Movie.objects.get(slug=movie_name_slug)
+
+    # Check user is the producer of the movie or superuser
+    if UserProfile.objects.get(user=request.user) != movie_obj.producer and not request.user.is_superuser:
+        messages.error(request, "You are not permitted to delete this movie")
+        return redirect(reverse('rotten_potatoes:movie', kwargs={"movie_name_slug": movie_name_slug}))
+
+    movie_obj.delete()
+
+    messages.success(request, "You have successfully deleted the movie.")
+    return redirect("/rotten_potatoes/")
 
 
 @login_required
@@ -410,7 +440,6 @@ def get_movie_context(movie_name_slug):
         except:
             newLink = "https://www.youtube.com/embed/dQw4w9WgXcQ"
             context_dictionary['urlLink'] = newLink
-        # In a context dict. store all the details about movie in a list
 
     # If movie object does not exist, set movie details to None
     except:
