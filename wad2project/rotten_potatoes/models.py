@@ -29,7 +29,7 @@ class Movie(models.Model):
     producer = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
     trailer = models.URLField(max_length=128)
     description = models.TextField(max_length=1024)
-    cover = models.ImageField(upload_to="movie_images", blank=True, default="movie_images/default.png")
+    cover = models.ImageField(upload_to="movie_images", blank=True, default="movie_images/default.jpg")
     upload_date = models.DateField()
     slug = models.SlugField(unique=True)
 
