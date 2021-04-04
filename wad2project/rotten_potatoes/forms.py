@@ -19,10 +19,10 @@ genres = [
 ]
 
 sort_by_list = [
-    ("-avg_rating", "Rating Descending"),
-    ("avg_rating", "Rating Ascending"),
-    ("-name", "Name <A-Z>"),
-    ("name", "Name <Z-A>"),
+    ("avg_rating", "Rating Descending"),
+    ("-avg_rating", "Rating Ascending"),
+    ("name", "Name <A-Z>"),
+    ("-name", "Name <Z-A>"),
     ("-num_of_ratings", "Number Of Ratings"),
 ]
 

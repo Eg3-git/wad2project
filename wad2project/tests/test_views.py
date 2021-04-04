@@ -1,5 +1,5 @@
 from datetime import timedelta
-from django.test import TestCase, Client, RequestFactory
+from django.test import TestCase, Client
 from django.urls import reverse
 
 from rotten_potatoes.forms import *
@@ -234,7 +234,7 @@ class TestEditMovieVies(TestCase):
         self.assertTrue(test_movie.description == "Test Description")
 
 
-class TestAddMovieView(TestCase):\
+class TestAddMovieView(TestCase):
 
     def setUp(self):
         self.client = Client()
