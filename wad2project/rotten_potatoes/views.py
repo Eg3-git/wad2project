@@ -417,8 +417,9 @@ def ratings(request):
                 "movie_list": None,
                 "this_years_favorite": None,
             }
-
-        return render(request, "rotten_potatoes/ratings.html", context_dict)
+        
+        finally:
+            return render(request, "rotten_potatoes/ratings.html", context_dict)
 
     else:
         print(form.errors)

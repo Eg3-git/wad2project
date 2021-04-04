@@ -1,0 +1,30 @@
+{% extends 'rotten_potatoes/base.html' %}
+{% load staticfiles %}
+
+{% block title_block %}
+	Ratings
+{% endblock %}
+
+{% block body_block %}
+	<h1>Ratings</h1>
+		<form
+			id="form"
+			method="post"
+			action="{% url 'rotten_potatoes:ratings' %}"
+			enctype="multipart/form-data"
+			class="auto-form">
+				{% csrf_token %}
+				{{ form.as_p }}
+				
+				<button type="submit">Add</button>
+		</form>
+		
+	{% if movie_list %}
+	<ul>
+		{% for m in movie_list %}
+		<li><a class="list-group-item" href="{% url 'rotten_potatoes:movie' m.slug %}">{{ m.name }}</a></li>
+		{% endfor %}
+	</ul>
+	{% endif %}
+	
+{% endblock %}
