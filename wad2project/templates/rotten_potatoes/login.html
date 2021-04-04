@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block body_block %}
-	<h1>Login Here!</h1>
+	<!-- <h1>Login Here!</h1>
 	<p>
 		{% if messages %}
 			{% for message in messages%}
@@ -14,23 +14,51 @@
 			{% endfor %}
 		{% endif %}
 	</p>
-	<form id="login_form" method="post" action="{% url 'rotten_potatoes:login' %}">
-		{% csrf_token %}
-		<label for="username">Username:</label>
-		<input 
-			id="username"
-			type="text"
-			name="username"
-			value=""
-			size="50"/>
-			
-		<label for="password">Password:</label>
-		<input
-			id="password"
-			type="password"
-			name="password"
-			value=""/>
-		
-		<button type="submit">Login</button>
-	</form>
+	 -->
+
+
+	<div class="container my-5">
+		<div class="row">
+			<div class="col-12">
+				<form class="py-4 row d-flex justify-content-center" id="login_form" method="post" action="{% url 'rotten_potatoes:login' %}">
+					{% csrf_token %}
+					<div class="col-8 col-md-5 col-lg-4 col-xl-3">
+						<div class="row my-4 d-flex justify-content-between">
+							<div class="col-3">
+								<label for="username">Username:</label>
+							</div>
+							<div class="col-8">
+								<input
+									id="username"
+									type="text"
+									name="username"
+									value=""
+									class=""/>
+							</div>
+						</div>
+						<div class="row my-4 d-flex justify-content-between">
+							<div class="col-3">
+								<label for="password">Password:</label>
+							</div>
+							<div class="col-8">
+								<input
+									id="password"
+									type="password"
+									name="password"
+									value="" class=""/>
+							</div>
+						</div>
+					</div>
+					<div class="col-3 col-md-2 col-lg-1 d-flex flex-column justify-content-center">
+						<button type="submit">Login</button>
+					</div>
+				</form>
+			</div>
+		</div>
+		<div class="row d-flex justify-content-center">
+				<a class="col-11 col-md-7 col-lg-5 col-xl-4" href="{% url 'rotten_potatoes:register' %}">Do not have an account? Register here!</a>
+		</div>
+	</div>
+
+
 {% endblock %}
