@@ -385,7 +385,7 @@ def edit_account(request):
 # Ratings view with default sorting by movie rating
 def ratings(request):
     form = RatingsPageForm()
-    context_dict = {"form": form}
+    context_dict = {}
 
     if request.method == "POST":
         form = RatingsPageForm(request.POST)
@@ -412,7 +412,8 @@ def ratings(request):
                 this_years_favorite = None
 
             context_dict["this_years_favorite"] = this_years_favorite
-
+            form = RatingsPageForm(initial={"genre": genre, "sort_by": sort_by})
+            context_dict["form"] = form
         else:
             return HttpResponse(form.errors)
 
@@ -429,6 +430,7 @@ def ratings(request):
 
         context_dict["movie_list"] = movies
         context_dict["this_years_favorite"] = this_years_favorite
+        context_dict["form"] = form
 
     return render(request, "rotten_potatoes/ratings.html", context_dict)
 

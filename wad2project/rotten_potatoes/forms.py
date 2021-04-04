@@ -5,17 +5,17 @@ from .models import *
 
 # List of genres to pick from
 genres = [
-    ("action", "Action"),
-    ("comedy", "Comedy"),
-    ("drama", "Drama"),
-    ("fantasy", "Fantasy"),
-    ("horror", "Horror"),
-    ("mystery", "Mystery"),
-    ("romance", "Romance"),
-    ("thriller", "Thriller"),
-    ("sci-fi", "Sci-Fi"),
-    ("western", "Western"),
-    ("experimental", "Experimental")
+    ("Action", "Action"),
+    ("Comedy", "Comedy"),
+    ("Drama", "Drama"),
+    ("Fantasy", "Fantasy"),
+    ("Horror", "Horror"),
+    ("Mystery", "Mystery"),
+    ("Romance", "Romance"),
+    ("Thriller", "Thriller"),
+    ("Sci-Fi", "Sci-Fi"),
+    ("Western", "Western"),
+    ("Experimental", "Experimental")
 ]
 
 sort_by_list = [
