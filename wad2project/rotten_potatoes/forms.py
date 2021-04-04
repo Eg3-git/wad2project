@@ -73,8 +73,8 @@ class EditMovieForm(forms.ModelForm):
 
 
 class RatingsPageForm(forms.Form):
-    genre = forms.ChoiceField(label="Genres", choices=genres, initial=None)
-    sort_by = forms.ChoiceField(label="Sort by", choices=sort_by_list, initial="-rating")
+    genre = forms.ChoiceField(label="Genres", choices=genres)
+    sort_by = forms.ChoiceField(label="Sort by", choices=sort_by_list)
 
 
 class AddRatingForm(forms.ModelForm):
