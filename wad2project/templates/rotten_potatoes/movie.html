@@ -65,9 +65,16 @@
 					{% if comments %}
 						<ul class="p-0 mb-0">
 						{% for c in comments %}
-							<li class="border-top border-2 border-dark ps-1 d-flex"><p class="mb-0"><b>{{ c.user }}:</b>  {{ c.text }}</p><span class="ms-auto me-1" onclick="alert({{c.id}})">X</span></li>
+							<li class="border-top border-2 border-dark ps-1 d-flex"><p class="mb-0"><b>{{ c.user }}:</b>  {{ c.text }}</p>
+								{% if c.user.user.id == user.id %}
+								<form style="display: none;" id="{{ c.pk }}" action="{% url 'rotten_potatoes:delete_comment' movie_name_slug=movie.slug comment_pk=c.pk %}" method="GET">
+								</form>
+									<button onclick="chosenCommentId = {{ c.id }}" class="ms-auto me-1" data-bs-toggle="modal" data-bs-target="#exampleModal">X</button>
+								{% endif %}</li>
 						{% endfor %}
 						</ul>
+					{% else %}
+						<p><em>There are no comments for this movie.</em></p>
 					{% endif %}
 				</div>
 				<div class="row d-flex justify-content-end">
@@ -79,6 +86,38 @@
 				</div>
 			</div>
 		</div>
+	</div>
+
+	<script type="text/javascript">
+		var chosenCommentId = null;
+
+		function submitDeleteForm(cci){
+			document.getElementById(cci).submit();
+		}
+	</script>
+
+	<!-- Button trigger modal -->
+	<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+	  Launch demo modal
+	</button>
+
+	<!-- Modal -->
+	<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title" id="exampleModalLabel">Delete Comment</h5>
+	        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+	      </div>
+	      <div class="modal-body">
+	        <p>Are you sure you would like to delete your comment?</p>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+	        <button onclick="submitDeleteForm(chosenCommentId)" type="button" class="btn btn-danger">Delete</button>
+	      </div>
+	    </div>
+	  </div>
 	</div>
 
 {% endblock %}
