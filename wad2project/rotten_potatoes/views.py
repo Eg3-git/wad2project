@@ -195,6 +195,8 @@ def edit_movie(request, movie_name_slug):
 
             if "cover" in request.FILES:
                 movie_edit.cover = request.FILES["cover"]
+            else:
+                movie_edit.profile_pic = "movie_images/default.jpg"
 
             movie_edit.save()
 
@@ -254,6 +256,18 @@ def rate_movie(request, movie_name_slug):
         messages.error(request, "Sorry, movie you tried to access does not exists")
         return redirect("/rotten_potatoes/")
 
+    try:
+        # Get all movie ratings
+        rating = Rating.objects.filter(movie=Movie.objects.get(slug=movie_name_slug))
+        # Check if any of the ratings are associated with the user
+        user_ratings = rating.filter(user=UserProfile.objects.get(user=request.user))
+
+        if user_ratings:  # If any rating associated with the user, don't allow them post more ratings
+            messages.error(request, "You have already rated this movie.")
+            return redirect(reverse("rotten_potatoes:movie", kwargs={"movie_name_slug": movie_name_slug}))
+    except:
+        pass
+
     # Check if user is not producer of the movie (producers cant rate their own movie)
     if UserProfile.objects.get(user=request.user).pk == Movie.objects.get(slug=movie_name_slug).producer.pk:
         messages.error(request, "You can not rate your own movie")
@@ -292,15 +306,19 @@ def add_movie(request):
         form = MovieForm(request.POST)
 
         if form.is_valid():
-            movie_form = form.save(commit=False)
-            # Set producer and datetime before saving to database
-            movie_form.producer = UserProfile.objects.get(user=request.user)
-            movie_form.upload_date = now()
+            try:
+                movie_form = form.save(commit=False)
+                # Set producer and datetime before saving to database
+                movie_form.producer = UserProfile.objects.get(user=request.user)
+                movie_form.upload_date = now()
 
-            if 'cover' in request.FILES:
-                movie_form.cover = request.FILES['cover']
+                if 'cover' in request.FILES:
+                    movie_form.cover = request.FILES['cover']
 
-            movie_form.save()
+                movie_form.save()
+            except:
+                messages.error(request, "Movie with this name already exists. Try movie name + release year.")
+                return redirect(reverse("rotten_potatoes:add_movie"))
 
             return redirect(reverse('rotten_potatoes:movie', kwargs={"movie_name_slug": movie_form.slug}))
         else:
@@ -311,10 +329,6 @@ def add_movie(request):
 
 @login_required
 def delete_movie(request, movie_name_slug):
-    # Get movie from the database, if not present return HttpResponse
-    if not check_movie_exists(movie_name_slug):
-        messages.error(request, "Sorry, movie you tried to access does not exists")
-        return redirect("/rotten_potatoes/")
     movie_obj = Movie.objects.get(slug=movie_name_slug)
 
     # Check user is the producer of the movie or superuser
@@ -360,6 +374,8 @@ def edit_account(request):
             profile = form.save(commit=False)
             if "profile_pic" in request.FILES:
                 profile.profile_pic = request.FILES["profile_pic"]
+            else:
+                profile.profile_pic = "profile_images/default.png"
 
             # Save form
             profile.save()
