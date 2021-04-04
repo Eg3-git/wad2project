@@ -18,4 +18,5 @@ urlpatterns = [
     path('account/', views.account, name='account'),
     path('account/edit/', views.edit_account, name='edit_account'),
     path('ratings/', views.ratings, name='ratings'),
+    path('movie/<slug:movie_name_slug>/deletecomment/<int:comment_pk>/', views.delete_comment, name='delete_comment'),
     ]

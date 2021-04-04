@@ -6,17 +6,24 @@
 {% endblock %}
 
 {% block body_block %}
-	<h1>Add a Comment</h1>
-		<form
-			id="form"
-			method="post"
-			action="{% url 'rotten_potatoes:add_comment' movie.slug %}"
-			enctype="multipart/form-data"
-			class="auto-form">
-				{% csrf_token %}
-				{{ form.as_p }}
-				
-				<button type="submit">Add</button>
-		</form>
-	
+	<div class="container my-5">
+		<h1 class="display-5 text-center">Add Comment To: {{ movie.name }}</h1>
+		<div class="d-flex justify-content-center my-4">
+			<form
+				id="form"
+				method="post"
+				action="{% url 'rotten_potatoes:add_comment' movie.slug %}"
+				enctype="multipart/form-data"
+				style="width: fit-content;">
+				<div class="row">
+					{% csrf_token %}
+					{{ form.text }}
+				</div>
+				<div class="row my-3">
+					<button class="btn btn-info" type="submit">Submit Comment</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
 {% endblock %}
