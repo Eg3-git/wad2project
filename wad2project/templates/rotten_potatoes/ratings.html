@@ -17,15 +17,19 @@
 					{% csrf_token %}
 					{{ form }}
 
-					<button class="btn btn-info ms-4" type="submit">Add</button>
+					<button class="btn btn-info ms-4" type="submit">Sort</button>
 			</form>
 
 		{% if movie_list %}
-		<ul class="list-group list-group-flush ps-0 my-5">
-			{% for m in movie_list %}
-			<a class="list-group-item" href="{% url 'rotten_potatoes:movie' m.slug %}">{{ m.name }}</a>
-			{% endfor %}
-		</ul>
+		<div class="card my-5">
+			<ul class="list-group list-group-flush">
+				{% for m in movie_list %}
+				<a class="list-group-item" href="{% url 'rotten_potatoes:movie' m.slug %}">{{ m.name }}</a>
+				{% endfor %}
+			</ul>
+		</div>
+		{% else %}
+			<p>No Movies to show</p>
 		{% endif %}
 	</div>
 
