@@ -16,7 +16,7 @@
 				{% csrf_token %}
 				{{ form.as_p }}
 				
-				<button type="submit">Add</button>
+				<button type="submit">Sort</button>
 		</form>
 		
 	{% if movie_list %}
@@ -25,6 +25,8 @@
 		<li><a class="list-group-item" href="{% url 'rotten_potatoes:movie' m.slug %}">{{ m.name }}</a></li>
 		{% endfor %}
 	</ul>
+	{% else %}
+		<p>No Movies to show</p>
 	{% endif %}
 	
 {% endblock %}
