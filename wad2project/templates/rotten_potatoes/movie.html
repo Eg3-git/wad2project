@@ -31,7 +31,13 @@
 				</div>
 				<div class="row mt-5">
 					<div class="col">
-						<p class="border border-dark border-3 rounded p-3">{{movie.description}}</p>
+						<p class="border border-dark border-3 rounded p-3">
+							{% if movie.description %}
+								{{movie.description}}
+							{% else %}
+								<em>This movie has no description :/</em>
+							{% endif %}
+						</p>
 					</div>
 				</div>
 			</div>
