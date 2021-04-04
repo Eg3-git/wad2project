@@ -311,7 +311,6 @@ def add_movie(request):
 
 @login_required
 def delete_movie(request, movie_name_slug):
-
     # Get movie from the database, if not present return HttpResponse
     if not check_movie_exists(movie_name_slug):
         messages.error(request, "Sorry, movie you tried to access does not exists")
@@ -385,45 +384,53 @@ def edit_account(request):
 
 # Ratings view with default sorting by movie rating
 def ratings(request):
-    form = RatingsPageForm(request.POST or None)
+    form = RatingsPageForm()
+    context_dict = {"form": form}
 
-    if form.is_valid():
+    if request.method == "POST":
+        form = RatingsPageForm(request.POST)
+
+        if form.is_valid():
+
+            movies = Movie.objects.annotate(avg_rating=Avg('rating__rating')).annotate(num_of_ratings=Count('rating'))
+
+            sort_by = form.cleaned_data.get('sort_by')
+            genre = form.cleaned_data.get('genre')
+
+            # Filter movies by genre, then sort them by sort_by
+            movies = movies.filter(genre=genre).order_by(sort_by)
+
+            context_dict["movie_list"] = movies
+
+            try:
+                current_year = datetime.now().date().strftime("%Y")
+                this_years_favorite = Movie.objects.annotate(avg_rating=Avg('rating__rating'))
+                this_years_favorite = this_years_favorite.filter(release_date__range=
+                                                                 [current_year + '-01-01',
+                                                                  current_year + '-12-31']).order_by('-avg_rating')[0]
+            except:
+                this_years_favorite = None
+
+            context_dict["this_years_favorite"] = this_years_favorite
+
+        else:
+            return HttpResponse(form.errors)
+
+    else:   # Http GET
+        movies = Movie.objects.annotate(avg_rating=Avg('rating__rating')).annotate(num_of_ratings=Count('rating'))
         try:
-            movies = Movie.objects.annotate(avg_rating=Avg("rating__rating")).annotate(num_of_ratings=Count("rating"))
-
-            current_year = datetime.now().date().strftime("%Y")  # Get current year
-            # get this years favorite
-            this_years_favorite = Movie.objects.filter(release_date__gte=current_year + '-01-01'). \
-                annotate(avg_rating=Avg('rating__rating')).order_by('-avg_rating')[0]
-
-            clean_data = form.cleaned_data()
-            sort_by = clean_data.get('sort_by')
-            genre = clean_data.get('genre')
-
-            if genre is not None:
-                movie_list = movies.filter(genre=genre).order_by(sort_by)
-            else:
-                movie_list = movies.order_by(sort_by)
-
-            context_dict = {
-                "form": form,
-                "movie_list": movie_list,
-                "this_years_favorite": this_years_favorite,
-            }
-
+            current_year = datetime.now().date().strftime("%Y")
+            this_years_favorite = Movie.objects.annotate(avg_rating=Avg('rating__rating'))
+            this_years_favorite = this_years_favorite.filter(release_date__range=
+                                                             [current_year + '-01-01',
+                                                              current_year + '-12-31']).order_by('-avg_rating')[0]
         except:
-            context_dict = {
-                "form": form,
-                "movie_list": None,
-                "this_years_favorite": None,
-            }
-        
-        finally:
-            return render(request, "rotten_potatoes/ratings.html", context_dict)
+            this_years_favorite = None
 
-    else:
-        print(form.errors)
-        return HttpResponse(form.errors)
+        context_dict["movie_list"] = movies
+        context_dict["this_years_favorite"] = this_years_favorite
+
+    return render(request, "rotten_potatoes/ratings.html", context_dict)
 
 
 def get_movie_context(movie_name_slug):

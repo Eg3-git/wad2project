@@ -55,7 +55,6 @@ class TestIndexViewNotEmptyDatabase(TestCase):
         # Create test movie with upload -15 days in past
         upload_date_not_recent = datetime.now() - timedelta(days=15)
         self.create_movie(name="Not Recent Movie", upload_date=upload_date_not_recent)
-
         response = self.client.get(self.index_url)
 
         # Check if page loads with status code 200
@@ -161,12 +160,12 @@ class TestMovieView(TestCase):
         # Check if data is displayed correctly
         self.assertContains(response, "Test Movie")                             # Movie name
         self.assertContains(response, str(self.test_profile.user.username))     # Producers name
-        self.assertContains(response, 'Release Date = Nov. 11, 1111')           # Release date
-        self.assertContains(response, 'Actors = Test Actor')                    # List of actors
-        self.assertContains(response, 'Genre = Test Genre')                     # Movie genre
-        self.assertContains(response, 'Description = Test Description')         # Description
-        self.assertContains(response, "Average Rating = " + "5")                # Average rating
-        self.assertContains(response, "Number Of Ratings = " + "1")             # Num of ratings
+        self.assertContains(response, 'Release Date: Nov. 11, 1111')            # Release date
+        self.assertContains(response, 'Actors: Test Actor')                     # List of actors
+        self.assertContains(response, 'Genre: Test Genre')                      # Movie genre
+        self.assertContains(response, 'Test Description')                       # Description
+        self.assertContains(response, "Rating: 5")                              # Average rating
+        self.assertContains(response, "Number of Ratings: 1")                   # Num of ratings
         self.assertContains(response, "Test Comment")                           # Comments
 
 
@@ -372,7 +371,7 @@ class TestEditAccountView(TestCase):
         # Check if correct template is used
         self.assertTemplateUsed(response, "rotten_potatoes/editaccount.html")
 
-    def test_edit_account_POST_changes_movie_data_and_redirects_correctly(self):
+    def test_edit_account_POST_changes_account_data_and_redirects_correctly(self):
         self.client.login(username="test_profile", password="123")  # Login client
 
         data = {
@@ -391,3 +390,61 @@ class TestEditAccountView(TestCase):
         # Check data changed correctly
         self.assertTrue(self.test_profile.profile_pic == "profile_images/default.png")  # If no file provided should set default picture
         self.assertTrue(self.test_profile.description == "Test Description")
+
+
+class AddCommentView(TestCase):
+
+    def setUp(self):
+        self.client = Client()
+        self.comment_url = reverse('rotten_potatoes:add_comment', args=["test-movie"])
+
+        user = User.objects.create_user(username="test_profile")
+        user.set_password("123")
+        user.save()
+
+        self.test_profile = UserProfile.objects.create(user=user)
+
+        self.test_movie = Movie.objects.create(name="Test Movie", producer=self.test_profile)
+
+    def test_add_comment_GET_uses_correct_template(self):
+        self.client.login(username="test_profile", password="123")
+
+        response = self.client.get(self.comment_url)
+
+        # Check status code is OK
+        self.assertEquals(response.status_code, 200)
+
+        # Check if correct template is used
+        self.assertTemplateUsed(response, "rotten_potatoes/addcomment.html")
+
+    def test_add_comment_GET_displays_correct_data(self):
+        self.client.login(username="test_profile", password="123")
+
+        response = self.client.get(self.comment_url)
+
+        # Check status code is OK
+        self.assertEquals(response.status_code, 200)
+
+        # Check correct data is displayed
+        self.assertContains(response, "Add Comment To: Test Movie")
+
+    def test_add_comment_POST_adds_comment_and_redirects_to_movie_page_correctly(self):
+        self.client.login(username="test_profile", password="123")
+
+        data = {
+            "text": "Test Comment",
+            "user": self.test_profile,
+            "movie": self.test_movie
+        }
+
+        response = self.client.post(self.comment_url, data=data, follow=True)
+
+        # Check status code is OK
+        self.assertEquals(response.status_code, 200)
+
+        # Check we got redirected correctly
+        self.assertTemplateUsed(response, "rotten_potatoes/movie.html")
+
+        # Check comment is displayed correctly
+        self.assertContains(response, self.test_profile.user.username)
+        self.assertContains(response, "Test Comment")
