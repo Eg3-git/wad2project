@@ -6,17 +6,21 @@
 {% endblock %}
 
 {% block body_block %}
-	<h1>Rate a Movie</h1>
+<div class="container my-5">
+	<h1 class="display-4 text-center mb-5">Rate Movie: {{ movie.name }}</h1>
+	<div class="d-flex justify-content-center">
 		<form
 			id="form"
 			method="post"
 			action="{% url 'rotten_potatoes:rate_movie' movie.slug %}"
 			enctype="multipart/form-data"
-			class="auto-form">
+			style="width: fit-content;">
 				{% csrf_token %}
 				{{ form.as_p }}
-				
+
 				<button type="submit">Add Rating</button>
 		</form>
-	
+	</div>
+</div>
+
 {% endblock %}

@@ -6,17 +6,21 @@
 {% endblock %}
 
 {% block body_block %}
-	<h1>Edit Movie</h1>
+<div class="container py-5">
+	<h1 class="display-3 text-center mb-5">Edit Movie</h1>
+	<div class="d-flex justify-content-center">
 		<form
 			id="form"
 			method="post"
 			action="{% url 'rotten_potatoes:edit_movie' movie %}"
 			enctype="multipart/form-data"
-			class="auto-form">
+			style="width: fit-content;">
 				{% csrf_token %}
 				{{ form.as_p }}
-				
+
 				<button type="submit">Save</button>
 		</form>
-	
+	</div>
+</div>
+
 {% endblock %}

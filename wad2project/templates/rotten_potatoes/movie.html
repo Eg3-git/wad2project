@@ -7,6 +7,12 @@
 
 {% block body_block %}
 
+	{% if messages %}
+		{% for message in messages %}
+			{{ message }}
+		{% endfor %}
+	{% endif %}
+
 	<div class="container my-5">
 		<div class="row">
 			<div class="col-4">
@@ -23,9 +29,20 @@
 						<p>Number of Ratings: {{ movie.num_of_ratings }}</p>
 					</div>
 				</div>
-				<div class="row mt-5">
+				<div class="row mt-1">
 					<div class="col">
-						<p class="border border-dark border-3 rounded p-3">{{movie.description}}</p>
+						<p class="border border-dark border-3 rounded p-3">
+							{% if movie.description %}
+								{{movie.description}}
+							{% else %}
+								<em>This movie has no description :/</em>
+							{% endif %}
+						</p>
+					</div>
+				</div>
+				<div class="row d-flex justify-content-center">
+					<div style="width: fit-content;">
+						<iframe width="560" height="315" src={{ urlLink }} frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 					</div>
 				</div>
 			</div>
