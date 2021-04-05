@@ -237,6 +237,12 @@ def add_comment(request, movie_name_slug):
 
 @login_required
 def delete_comment(request, movie_name_slug, comment_pk):
+    try:
+        Rating.objects.get(pk=comment_pk)
+    except:
+        messages.error(request, "Sorry, comment you tried to access does not exists")
+        return redirect("/rotten_potatoes/")
+
     # Check if user is associated with the comment
     user = UserProfile.objects.get(user=request.user)
     comment = Comment.objects.get(pk=comment_pk)
@@ -329,6 +335,11 @@ def add_movie(request):
 
 @login_required
 def delete_movie(request, movie_name_slug):
+
+    if not check_movie_exists(movie_name_slug):
+        messages.error(request, "Sorry, movie you tried to access does not exists")
+        return redirect("/rotten_potatoes/")
+
     movie_obj = Movie.objects.get(slug=movie_name_slug)
 
     # Check user is the producer of the movie or superuser
