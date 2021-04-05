@@ -1,0 +1,23 @@
+body {
+  background-color: #B2B09B;
+}
+
+nav {
+  background-color: #254441c4;
+}
+
+ul{
+  list-style-type: none;
+}
+
+.center-fields {
+  width: fit-content;
+}
+
+.hide {
+  display: none;
+}
+
+iframe {
+  max-width: 100%;
+}

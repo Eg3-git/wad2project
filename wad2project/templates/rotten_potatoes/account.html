@@ -9,11 +9,11 @@
 
 	<div class="container my-5">
 		<div class="row">
-			<div class="col-3">
+			<div class="col-md-3">
 				<h1 class="display-5">{{ user.username }}</h1>
 				<p><img class="img-fluid" src="{{ MEDIA_URL }}{{profile.profile_pic}}" alt="Profile Picture"/></p>
 			</div>
-			<div class="col-9">
+			<div class="col-md-9">
 				<div class="row">
 					<h3 class="col-12 display-5">About Me</h3>
 				</div>
@@ -41,7 +41,7 @@
 		</div>
 
 		<div class="row">
-			<a class="btn btn-info col-3" href="{% url 'rotten_potatoes:edit_account' %}">Edit Details</a>
+			<a class="btn btn-primary col-12 col-md-3 mt-2 mt-md-0" href="{% url 'rotten_potatoes:edit_account' %}">Edit Details</a>
 		</div>
 	</div>
 

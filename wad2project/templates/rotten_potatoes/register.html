@@ -7,7 +7,7 @@
 
 {% block body_block %}
 <div class="container my-5">
-	<h1 class="text-center mb-4">Register</h1>
+	<h1 class="text-center display-5 mb-4">Register</h1>
 	{% if registered %}
 		<h3>Thanks for registering</h3>
 		<a href="{% url 'rotten_potatoes:index' %}">Return to home</a>
@@ -18,11 +18,20 @@
 			method="post"
 			action="{% url 'rotten_potatoes:register' %}"
 			enctype="multipart/form-data"
-			style="width: fit-content;">
+			class="center-fields">
 				{% csrf_token %}
-				{{ user_form.as_p }}
-				{{ profile_form.as_p }}
-				<button type="submit">Register</button>
+				<p class="row"><label class="col-3" for="{{ user_form.username.id_for_label }}">Username: </label>
+						<span class="col-9">{{ user_form.username }}</span>
+				</p>
+				<p class="row"><label class="col-3" for="{{ user_form.password.id_for_label }}">Password: </label>
+				<span class="col-9">{{ user_form.password }}</span></p>
+				<p><label for="{{ profile_form.profile_pic.id_for_label }}">Profile picture: </label>
+				{{ profile_form.profile_pic }}</p>
+				<p class="d-flex"><label class="me-2" for="{{ profile_form.description.id_for_label }}">Description: </label>
+				{{ profile_form.description }}</p>
+				<p><label for="{{ profile_form.producer.id_for_label }}">Producer: </label>
+				{{ profile_form.producer }}</p>
+				<button class="btn btn-primary" type="submit">Register</button>
 		</form>
 	</div>
 	{% endif %}
