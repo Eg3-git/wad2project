@@ -238,7 +238,7 @@ def add_comment(request, movie_name_slug):
 @login_required
 def delete_comment(request, movie_name_slug, comment_pk):
     try:
-        Rating.objects.get(pk=comment_pk)
+        Comment.objects.get(pk=comment_pk)
     except:
         messages.error(request, "Sorry, comment you tried to access does not exists")
         return redirect("/rotten_potatoes/")
