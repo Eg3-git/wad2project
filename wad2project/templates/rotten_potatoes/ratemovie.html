@@ -14,11 +14,11 @@
 			method="post"
 			action="{% url 'rotten_potatoes:rate_movie' movie.slug %}"
 			enctype="multipart/form-data"
-			style="width: fit-content;">
+			class="center-fields">
 				{% csrf_token %}
 				{{ form.as_p }}
 
-				<button type="submit">Add Rating</button>
+				<button class="btn btn-primary" type="submit">Add Rating</button>
 		</form>
 	</div>
 </div>

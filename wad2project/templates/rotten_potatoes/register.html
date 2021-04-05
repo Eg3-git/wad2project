@@ -18,7 +18,7 @@
 			method="post"
 			action="{% url 'rotten_potatoes:register' %}"
 			enctype="multipart/form-data"
-			style="width: fit-content;">
+			class="center-fields">
 				{% csrf_token %}
 				<p class="row"><label class="col-3" for="{{ user_form.username.id_for_label }}">Username: </label>
 						<span class="col-9">{{ user_form.username }}</span>
@@ -31,7 +31,7 @@
 				{{ profile_form.description }}</p>
 				<p><label for="{{ profile_form.producer.id_for_label }}">Producer: </label>
 				{{ profile_form.producer }}</p>
-				<button type="submit">Register</button>
+				<button class="btn btn-primary" type="submit">Register</button>
 		</form>
 	</div>
 	{% endif %}

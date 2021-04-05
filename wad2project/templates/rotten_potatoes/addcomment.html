@@ -14,13 +14,13 @@
 				method="post"
 				action="{% url 'rotten_potatoes:add_comment' movie.slug %}"
 				enctype="multipart/form-data"
-				style="width: fit-content;">
+				class="center-fields">
 				<div class="row">
 					{% csrf_token %}
 					{{ form.text }}
 				</div>
 				<div class="row my-3">
-					<button class="btn btn-info" type="submit">Submit Comment</button>
+					<button class="btn btn-primary" type="submit">Submit Comment</button>
 				</div>
 			</form>
 		</div>
