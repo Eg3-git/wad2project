@@ -9,6 +9,13 @@
 	<div class="container my-5">
 		<h1 class="display-3 text-center mb-5">Add a Movie</h1>
 		<div class="d-flex justify-content-center">
+			{% if messages %}
+			<p>
+				{% for message in messages %}
+					{{ message }}
+				{% endfor %}
+			</p>
+			{% endif %}
 			<form
 				id="form"
 				method="post"

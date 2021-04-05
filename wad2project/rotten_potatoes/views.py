@@ -190,17 +190,21 @@ def edit_movie(request, movie_name_slug):
         form = EditMovieForm(request.POST, request.FILES)
 
         if form.is_valid():
-            form = EditMovieForm(request.POST, instance=movie_obj)
-            movie_edit = form.save(commit=False)
+            try:
+                form = EditMovieForm(request.POST, instance=movie_obj)
+                movie_edit = form.save(commit=False)
 
-            if "cover" in request.FILES:
-                movie_edit.cover = request.FILES["cover"]
-            else:
-                movie_edit.profile_pic = "movie_images/default.jpg"
+                if "cover" in request.FILES:
+                    movie_edit.cover = request.FILES["cover"]
+                else:
+                    movie_edit.profile_pic = "movie_images/default.jpg"
 
-            movie_edit.save()
+                movie_edit.save()
 
-            return redirect(reverse("rotten_potatoes:movie", kwargs={"movie_name_slug": movie_name_slug}))
+                return redirect(reverse("rotten_potatoes:movie", kwargs={"movie_name_slug": movie_name_slug}))
+            except:
+                messages.error(request, "Movie with this name already exists. Try movie name + release year.")
+                return redirect(reverse("rotten_potatoes:edit_movie", kwargs={"movie_name_slug": movie_name_slug}))
 
         else:
             print(form.errors)
